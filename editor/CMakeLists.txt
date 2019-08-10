@@ -25,13 +25,6 @@ project(editor)
 
 	SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
-	if(WIN32)
-		#external headers
-		set(EXTERNAL_HEADERS "/experimental:external /external:W0 /external:I ${CMAKE_SOURCE_DIR}/external/gli")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTERNAL_HEADERS}")
-	endif (WIN32)
-	
-
 	SOURCE_GROUP_BY_FOLDER(vulkanViewport)
 
 

@@ -10,8 +10,7 @@ project(engine)
     file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.h" "src/*.inl")
 
 	include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS} 
-	 "../external/meshoptimizer/src"
-	 "../external/glm/"
+	 "../external/headers"
 	)
 
 	#if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
