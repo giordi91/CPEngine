@@ -1,4 +1,5 @@
 #pragma once
+#include "CPEngine/core/window.h"
 //#include "Window.h"
 //#include "core.h"
 //
@@ -10,8 +11,8 @@ namespace cp {
 class Application {
 public:
   Application();
-  virtual ~Application()= default;
-  virtual void run()=0;
+  virtual ~Application();
+  virtual void run();
 
   /*
   void onEvent(Event &e);
@@ -33,12 +34,12 @@ m_queuedEndOfFrameEventsCurrent =
 */
 
 private:
+  core::Window *m_window = nullptr;
+  bool m_run = true;
   /*
 std::vector<std::vector<Event *>> m_queuedEndOfFrameEvents;
 std::vector<Event *> *m_queuedEndOfFrameEventsCurrent;
 uint32_t m_queueEndOfFrameCounter = 0;
-Window *m_window = nullptr;
-bool m_run = true;
 LayerStack m_layerStack;
 Layer *imGuiLayer;
 Layer *graphicsLayer;

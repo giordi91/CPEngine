@@ -1,4 +1,6 @@
 #include "CPEngine/application.h"
+#include "platform/windows/core/windowsWindow.h"
+
 //#include "SirEngine/globals.h"
 //#include "SirEngine/graphics/graphicsCore.h"
 //#include "SirEngine/layer.h"
@@ -32,7 +34,7 @@ Application::Application() {
 
   //parseConfigFile();
 
-  //m_window = Window::create();
+  m_window = core::Window::create();
   //m_window->setEventCallback([this](Event &e) -> void { this->onEvent(e); });
   //m_queuedEndOfFrameEvents.resize(2);
   //m_queuedEndOfFrameEvents[0].reserve(10);
@@ -47,29 +49,29 @@ Application::Application() {
 
 }
 
-/*
 Application::~Application() { delete m_window; }
 void Application::run() {
   while (m_run) {
-    globals::LAST_FRAME_TIME_NS = globals::GAME_CLOCK.getDelta();
-    ++globals::TOTAL_NUMBER_OF_FRAMES;
+    //globals::LAST_FRAME_TIME_NS = globals::GAME_CLOCK.getDelta();
+    //++globals::TOTAL_NUMBER_OF_FRAMES;
     m_window->onUpdate();
-    graphics::newFrame();
-
-    for (Layer *l : m_layerStack) {
-      l->onUpdate();
-    }
-    graphics::dispatchFrame();
-
-    auto currentQueue = m_queuedEndOfFrameEventsCurrent;
-    flipEndOfFrameQueue();
-    for (auto e : (*currentQueue)) {
-      onEvent(*e);
-      delete e;
-    }
-    currentQueue->clear();
+//    graphics::newFrame();
+//
+//    for (Layer *l : m_layerStack) {
+//      l->onUpdate();
+//    }
+//    graphics::dispatchFrame();
+//
+//    auto currentQueue = m_queuedEndOfFrameEventsCurrent;
+//    flipEndOfFrameQueue();
+//    for (auto e : (*currentQueue)) {
+//      onEvent(*e);
+//      delete e;
+//    }
+//    currentQueue->clear();
   }
 
+  /*
   // lets make sure any graphics operation are done
   graphics::stopGraphics();
 
@@ -80,7 +82,9 @@ void Application::run() {
 
   // shutdown anything graphics related;
   graphics::shutdownGraphics();
+  */
 }
+/*
 void Application::queueEventForEndOfFrame(Event *e) {
   m_queuedEndOfFrameEventsCurrent->push_back(e);
 }

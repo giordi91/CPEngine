@@ -26,6 +26,8 @@ void cleanUpLogging() {
 
 void logCoreTrace(const char *message) { s_coreLogger->trace(message); }
 void logCoreInfo(const char *message) { s_coreLogger->info(message); }
+void logCoreInfo(const char *message, const char* message2) { s_coreLogger->info(message, message2); }
+void logCoreInfo(const char *message, uint32_t value1, uint32_t value2) { s_coreLogger->info(message, value1,value2); }
 void logCoreWarn(const char *message) { s_coreLogger->warn(message); }
 void logCoreError(const char *message) { s_coreLogger->error(message); }
 void logTrace(const char *message) { s_clientLogger->trace(message); }
