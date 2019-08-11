@@ -16,7 +16,7 @@ project(editor)
 	#lets add specific windows build definitions
 	if (WIN32)
 		add_compile_definitions( _UNICODE VK_NO_PROTOTYPES VK_USE_PLATFORM_WIN32_KHR WIN32_LEAN_AND_MEAN 
-		NOMINMAX QUIT_ESCAPE VULKAN_OBJ_TRACKER )
+		NOMINMAX QUIT_ESCAPE VULKAN_OBJ_TRACKER _CRT_SECURE_NO_WARNINGS)
 	endif (WIN32)
 
 	#making sure to add the common cpp flags, that are defined in the main cpp file

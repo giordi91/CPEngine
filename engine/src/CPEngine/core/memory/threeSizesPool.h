@@ -149,8 +149,9 @@ class ThreeSizesPool final {
 
     assert(header->isNode == 0);
 
-#if SE_DEBUG
+#if CP_DEBUG
     // tagging the memory as freed
+	const uint32_t allocSize = header->size;
     memset(memoryPtr, 0xff, allocSize - sizeof(AllocHeader));
 #endif
 

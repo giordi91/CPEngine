@@ -286,7 +286,7 @@ const wchar_t* StringPool::convertWide(const char* string,
   auto* newChar = reinterpret_cast<wchar_t*>(
       m_pool.allocate(sizeof(wchar_t) * (len + 1), allocFlags));
   // do the conversion
-  mbstowcs(newChar,  string, len);
+  mbstowcs(newChar,  string, (len*2)+1);
 
   // now we have some clean up to do based on flags
   const int inPool = m_pool.allocationInPool(string);
@@ -306,7 +306,7 @@ const wchar_t* StringPool::convertFrameWide(const char* string) {
   auto* newChar = reinterpret_cast<wchar_t*>(
       m_stackAllocator.allocate(sizeof(wchar_t) * (len + 1)));
   // do the conversion
-  mbstowcs(newChar,  string, len);
+  mbstowcs(newChar,  string, (len*2)+1);
   return newChar;
 }
 }  // namespace SirEngine

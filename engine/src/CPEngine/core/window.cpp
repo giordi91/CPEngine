@@ -11,13 +11,11 @@ BaseWindow *BaseWindow::create(const WindowProps &props)
 {
 
 #if CP_WINDOWS_PLATFORM
-	//return new windows::WindowsWindow(props);
+	return new windows::WindowsWindow(props);
 #endif
 
 #if CP_LINUX_PLATFORM
     return new linux::LinuxWindow(props);
 #endif
-
-    assert(!"No avaialbe window to create for this OS");
 }
 } // namespace cp::core

@@ -14,17 +14,18 @@ project(engine)
     file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.h" "src/*.inl")
 
 	include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS} 
-	 "../external/headers"
+	"../external/headers"
 	)
+	#exteral headers
+	ENABLE_SYSTEM_HEADERS()
+	ADD_EXTERNAL_HEADER("../external/headers")
+	FINALIZE_EXTERNAL_HEADER()
 
-	#if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	#	add_compile_options(/wd4251 /wd4275)
-	#endif()
 
 	#lets add specific windows build definitions
 	if (WIN32)
 		add_compile_definitions( _UNICODE VK_NO_PROTOTYPES VK_USE_PLATFORM_WIN32_KHR WIN32_LEAN_AND_MEAN 
-		NOMINMAX QUIT_ESCAPE VULKAN_OBJ_TRACKER CP_WINDOWS_PLATFORM)
+		NOMINMAX QUIT_ESCAPE VULKAN_OBJ_TRACKER CP_WINDOWS_PLATFORM  _CRT_SECURE_NO_WARNINGS)
 	endif (WIN32)
     if (UNIX)
         add_compile_definitions( VK_NO_PROTOTYPES QUIT_ESCAPE VULKAN_OBJ_TRACKER CP_LINUX_PLATFORM)
@@ -32,7 +33,7 @@ project(engine)
 
 	#making sure to add the common cpp flags, that are defined in the main cpp file
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_CXX_FLAGS}")
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG -DCP_DEBUG")
 
 	SOURCE_GROUP_BY_FOLDER(vulkanViewport)
 

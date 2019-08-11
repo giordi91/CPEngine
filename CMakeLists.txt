@@ -46,6 +46,7 @@ endif()
 
 add_subdirectory(engine)
 add_subdirectory(editor)
+add_subdirectory(tests)
 #add_subdirectory(SirEngineThe3rdLib)
 #add_subdirectory(Sandbox)
 #add_subdirectory(ResourceCompilerLib)

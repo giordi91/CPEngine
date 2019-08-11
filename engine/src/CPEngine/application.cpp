@@ -1,5 +1,6 @@
 #include "CPEngine/application.h"
-#include "CPEngine/core/window.h"
+//#include "CPEngine/core/window.h"
+#include "CPEngine/platform/windows/core/windowsWindow.h"
 #include "core/logging.h"
 #include "core/core.h"
 
