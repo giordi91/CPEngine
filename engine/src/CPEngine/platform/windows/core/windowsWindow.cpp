@@ -1,4 +1,5 @@
 
+#if CP_WINDOWS_PLATFORM
 #include "CPEngine/platform/windows/core/windowsWindow.h"
 
 #include "CPEngine/core/logging.h"
@@ -235,3 +236,4 @@ void WindowsWindow::setEventCallback(const EventCallbackFn &callback) {
 }
 
 } // namespace cp::windows
+#endif

@@ -3,6 +3,7 @@
 #include <type_traits>
 #include "CPEngine/core/memory/stackAllocator.h"
 #include "CPEngine/core/memory/threeSizesPool.h"
+#include <cstddef>
 
 namespace cp::core{
 

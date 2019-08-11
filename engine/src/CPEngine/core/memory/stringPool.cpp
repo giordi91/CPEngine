@@ -1,6 +1,7 @@
 #include "CPEngine/core/memory/stringPool.h"
 #include <cstdio>
 #include <cstdlib>
+#include <cwchar>
 
 namespace cp::core{
 
@@ -42,10 +43,9 @@ inline int isFlagSet(const uint8_t flags,
 
 const char* StringPool::loadFilePersistent(const char* path,
                                            uint32_t& readFileSize) {
-  FILE* fp = nullptr;
 
-  const errno_t error = fopen_s(&fp, path, "rb");
-  assert((error == 0) && "could not open file");
+  FILE* fp = fopen( path, "rb");
+  assert((fp != nullptr) && "could not open file");
 
   fseek(fp, 0L, SEEK_END);
   const long fileSize = ftell(fp);
@@ -66,10 +66,8 @@ const char* StringPool::loadFilePersistent(const char* path,
 
 const char* StringPool::loadFileFrame(const char* path, uint32_t& readFileSize)
 {
-  FILE* fp = nullptr;
-
-  const errno_t error = fopen_s(&fp, path, "rb");
-  assert((error == 0) && "could not open file");
+  FILE* fp  = fopen( path, "rb");
+  assert((fp != nullptr) && "could not open file");
 
   fseek(fp, 0L, SEEK_END);
   const long fileSize = ftell(fp);
@@ -199,7 +197,6 @@ const char* StringPool::concatenateFrame(const char* first, const char* second,
       joiner != nullptr ? static_cast<uint32_t>(strlen(joiner)) : 0u;
 
   // plus one for null terminator
-  const auto allocFlags = static_cast<uint8_t>(STRING_TYPE::CHAR);
   const uint32_t totalLen = firstLen + secondLen + joinerLen + 1;
 
   // make the allocation
@@ -255,8 +252,7 @@ const char* StringPool::convert(const wchar_t* string, const uint8_t flags) {
   // make the allocation
   auto* newChar = reinterpret_cast<char*>(m_pool.allocate(len + 1, allocFlags));
   // do the conversion
-  size_t converted;
-  wcstombs_s(&converted, newChar, len + 1, string, len * 2);
+  wcstombs(newChar,  string, len +1);
 
   // now we have some clean up to do based on flags
   const int firstSet = isFlagSet(flags, FREE_FIRST_AFTER_OPERATION);
@@ -273,8 +269,7 @@ const char* StringPool::convertFrame(const wchar_t* string) {
   auto* newChar = reinterpret_cast<char*>(m_stackAllocator.allocate(len + 1));
 
   // do the conversion
-  size_t converted;
-  wcstombs_s(&converted, newChar, len + 1, string, len * 2);
+  wcstombs(newChar,  string, len + 1);
 
   return newChar;
 }
@@ -291,8 +286,7 @@ const wchar_t* StringPool::convertWide(const char* string,
   auto* newChar = reinterpret_cast<wchar_t*>(
       m_pool.allocate(sizeof(wchar_t) * (len + 1), allocFlags));
   // do the conversion
-  size_t converted;
-  mbstowcs_s(&converted, newChar, (len + 1 * 2), string, len);
+  mbstowcs(newChar,  string, len);
 
   // now we have some clean up to do based on flags
   const int inPool = m_pool.allocationInPool(string);
@@ -312,8 +306,7 @@ const wchar_t* StringPool::convertFrameWide(const char* string) {
   auto* newChar = reinterpret_cast<wchar_t*>(
       m_stackAllocator.allocate(sizeof(wchar_t) * (len + 1)));
   // do the conversion
-  size_t converted;
-  mbstowcs_s(&converted, newChar, (len + 1 * 2), string, len);
+  mbstowcs(newChar,  string, len);
   return newChar;
 }
 }  // namespace SirEngine

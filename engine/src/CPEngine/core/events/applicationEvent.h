@@ -22,9 +22,9 @@ public:
   EVENT_CLASS_CATEGORY(EventCategoryApplication)
   const char* toString() const override {
     char x[64];
-    sprintf_s(x, sizeof(x), "%i", m_width);
+    sprintf(x,  "%i", m_width);
     char y[64];
-    sprintf_s(y, sizeof(y), "%i", m_height);
+    sprintf(y,  "%i", m_height);
     const char *positionsString = STRING_POOL->concatenateFrame(x, y, ",");
     const char *finalString =
         STRING_POOL->concatenateFrame("WindowResizeEvent: ", positionsString);

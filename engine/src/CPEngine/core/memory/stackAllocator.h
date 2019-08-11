@@ -1,5 +1,6 @@
 #pragma once
 #include <cassert>
+#include <cstddef>
 
 // not thread safe
 namespace cp::core{

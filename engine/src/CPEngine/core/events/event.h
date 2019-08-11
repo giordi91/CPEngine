@@ -37,7 +37,7 @@ enum EVENT_CATEGORY {
 };
 
 #define EVENT_CLASS_TYPE(type)                                                 \
-  static EVENT_TYPE getStaticType() { return EVENT_TYPE::##type; }               \
+  static EVENT_TYPE getStaticType() { return EVENT_TYPE::type; }               \
   virtual EVENT_TYPE getEventType() const override { return getStaticType(); }  \
   virtual const char *getName() const override { return #type; }
 
@@ -81,16 +81,9 @@ public:
       return true;
     }
     return false;
-  };
+  }
 
 private:
   Event &m_event;
 };
-inline std::ostream &operator<<(std::ostream &os, const Event &e) {
-	const char* string = e.toString();
-	printf(string);
-  //return os << string;
-	return os;
-}
-
 } // namespace SirEngine
