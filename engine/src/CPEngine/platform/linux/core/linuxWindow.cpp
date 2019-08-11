@@ -1,3 +1,8 @@
+/*
+ * This code has be hacked togetherby following the samples of:
+ * https://github.com/SaschaWillems/Vulkan.
+ * He is a hero!
+ */
 
 #if CP_LINUX_PLATFORM
 #include "CPEngine/platform/linux/core/linuxWindow.h"
