@@ -1,7 +1,7 @@
 #include "CPEngine/core/window.h"
-//#if CP_WINDOW_PLATFORM
+#if CP_WINDOWS_PLATFORM
 #include  "CPEngine/platform/windows/core/windowsWindow.h" 
-//#endif
+#endif
 
 namespace cp::core {
 Window *Window::create(const WindowProps &props)

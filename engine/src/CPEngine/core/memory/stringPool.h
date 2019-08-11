@@ -1,8 +1,8 @@
 #pragma once
 
 #include <type_traits>
-#include "CPEngine/core/stackAllocator.h"
-#include "CPEngine/core/threeSizesPool.h"
+#include "CPEngine/core/memory/stackAllocator.h"
+#include "CPEngine/core/memory/threeSizesPool.h"
 
 namespace cp::core{
 
