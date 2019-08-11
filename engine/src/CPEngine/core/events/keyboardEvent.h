@@ -10,10 +10,13 @@ public:
 
   EVENT_CLASS_TYPE(KeyPressed)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
-  std::string toString() const override {
+  const char* toString() const override {
+	  /*
     std::stringstream s;
     s << "KeyboardPressEvent: " << m_button;
     return s.str();
+	*/
+	  return nullptr;
   }
   uint32_t getKeyCode() const { return m_button; }
 
@@ -27,10 +30,13 @@ public:
 
   EVENT_CLASS_TYPE(KeyReleased)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
-  std::string toString() const override {
+  const char* toString() const override {
+	  /*
     std::stringstream s;
     s << "KeyboardReleaseEvent: " << m_button;
     return s.str();
+	*/
+	  return nullptr;
   }
 
   uint32_t getKeyCode() const { return m_button; }
@@ -45,10 +51,13 @@ public:
 
   EVENT_CLASS_TYPE(KeyTyped)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
-  std::string toString() const override {
+  const char* toString() const override {
+	  /*
     std::stringstream s;
     s << "Keyboard typed char: " << m_button;
     return s.str();
+	*/
+	  return nullptr;
   }
   inline uint32_t getKeyCode() const { return m_button; }
 

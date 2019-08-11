@@ -52,7 +52,7 @@ public:
   virtual EVENT_TYPE getEventType() const = 0;
   virtual const char *getName() const = 0;
   virtual int getCategoryFlags() const = 0;
-  virtual std::string toString() const { return getName(); }
+  virtual const char* toString() const { return getName(); }
 
   inline bool isInCategory(EVENT_CATEGORY category) {
     return getCategoryFlags() & category;
@@ -87,7 +87,10 @@ private:
   Event &m_event;
 };
 inline std::ostream &operator<<(std::ostream &os, const Event &e) {
-  return os << e.toString();
+	const char* string = e.toString();
+	printf(string);
+  //return os << string;
+	return os;
 }
 
 } // namespace SirEngine

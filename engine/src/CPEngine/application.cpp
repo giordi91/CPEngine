@@ -1,5 +1,6 @@
 #include "CPEngine/application.h"
 #include "platform/windows/core/windowsWindow.h"
+#include "core/logging.h"
 
 //#include "SirEngine/globals.h"
 //#include "SirEngine/graphics/graphicsCore.h"
@@ -92,6 +93,7 @@ void Application::queueEventForEndOfFrame(Event *e) {
 void Application::onEvent(core::Event &e) {
   // close event dispatch
   // SE_CORE_INFO("{0}", e);
+  logCoreInfo("{0}",e.toString());
   core::EventDispatcher dispatcher(e);
   dispatcher.dispatch<core::WindowCloseEvent>(
       [this](core::WindowCloseEvent &e) -> bool {
