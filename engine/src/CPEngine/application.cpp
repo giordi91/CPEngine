@@ -36,7 +36,7 @@ Application::Application() {
 
   // parseConfigFile();
 
-  m_window = core::Window::create();
+  m_window = core::BaseWindow::create();
   m_window->setEventCallback(
       [this](core::Event &e) -> void { this->onEvent(e); });
   // m_queuedEndOfFrameEvents.resize(2);

@@ -28,7 +28,7 @@ m_queuedEndOfFrameEventsCurrent =
 */
 
 private:
-  core::Window *m_window = nullptr;
+  core::BaseWindow *m_window = nullptr;
   bool m_run = true;
 std::vector<std::vector<core::Event *>> m_queuedEndOfFrameEvents;
 std::vector<core::Event *> *m_queuedEndOfFrameEventsCurrent;

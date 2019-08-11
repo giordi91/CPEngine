@@ -14,11 +14,11 @@ struct NativeWindow {
   uint64_t data;
 };
 
-class Window {
+class BaseWindow {
 public:
   using EventCallbackFn = std::function<void(Event &)>;
 
-  virtual ~Window() = default;
+  virtual ~BaseWindow() = default;
   virtual void onUpdate() = 0;
   virtual void onResize(uint32_t width, unsigned int height) = 0;
 
@@ -29,6 +29,6 @@ public:
   // virtual void *getNativeWindow() const = 0;
 
   // This needs to be implemented per platform
-  static Window *create(const WindowProps &props = WindowProps());
+  static BaseWindow *create(const WindowProps &props = WindowProps());
 };
 } // namespace cp

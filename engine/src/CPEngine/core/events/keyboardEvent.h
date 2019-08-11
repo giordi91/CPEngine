@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CPEngine/core/events/event.h"
+#include <stdlib.h>
 
 namespace cp::core {
 class KeyboardPressEvent final : public Event {
@@ -12,7 +13,7 @@ public:
   const char *toString() const override {
 
     char buttonBuffer[32];
-    _itoa_s(m_button, buttonBuffer, 10);
+    sprintf(buttonBuffer,  "%i", m_button);
     return core::STRING_POOL->concatenateFrame("KeyboardPressEvent: ",
                                                buttonBuffer);
   }
@@ -30,7 +31,7 @@ public:
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
   const char *toString() const override {
     char buttonBuffer[32];
-    _itoa_s(m_button, buttonBuffer, 10);
+    sprintf(buttonBuffer,  "%i", m_button);
     return core::STRING_POOL->concatenateFrame("KeyboardPressEvent: ",
                                                buttonBuffer);
   }
@@ -49,7 +50,7 @@ public:
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
   const char *toString() const override {
     char buttonBuffer[32];
-    _itoa_s(m_button, buttonBuffer, 10);
+    sprintf(buttonBuffer,  "%i", m_button);
     return core::STRING_POOL->concatenateFrame("KeyboardPressEvent: ",
                                                buttonBuffer);
   }

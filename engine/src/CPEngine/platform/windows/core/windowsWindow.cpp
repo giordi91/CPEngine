@@ -142,7 +142,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT umessage, WPARAM wparam,
 }
 
 //// This needs to be implemented per platform
-// core::Window * core::Window::create(const core::WindowProps &props) {
+// core::BaseWindow * core::BaseWindow::create(const core::WindowProps &props) {
 //  return new WindowsWindow(props);
 //};
 

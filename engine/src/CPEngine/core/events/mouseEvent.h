@@ -12,9 +12,9 @@ public:
   const char *toString() const override {
 
     char x[64];
-    sprintf_s(x, sizeof(x), "%f", m_posX);
+    sprintf(x, "%f", m_posX);
     char y[64];
-    sprintf_s(y, sizeof(y), "%f", m_posY);
+    sprintf(y, "%f", m_posY);
     const char *positionsString = STRING_POOL->concatenateFrame(x, y, ",");
     const char *finalString =
         STRING_POOL->concatenateFrame("MouseMoveEvent ", positionsString);
@@ -37,9 +37,9 @@ public:
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryMouse)
   const char *toString() const override {
     char x[64];
-    sprintf_s(x, sizeof(x), "%f", m_offsetX);
+    sprintf(x, "%f", m_offsetX);
     char y[64];
-    sprintf_s(y, sizeof(y), "%f", m_offsetY);
+    sprintf(y, "%f", m_offsetY);
     const char *positionsString = STRING_POOL->concatenateFrame(x, y, ",");
     const char *finalString =
         STRING_POOL->concatenateFrame("MouseScrolled ", positionsString);

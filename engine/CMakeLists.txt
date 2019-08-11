@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.13.0)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 include (${CMAKE_SOURCE_DIR}/cmake/cmakeUtils.cmake)
 
 project(engine)   
 
+	if(UNIX)
+    find_package(XCB REQUIRED)
+	endif(UNIX)
 	find_package(Vulkan REQUIRED)
 
     #looking for  files
@@ -22,6 +26,9 @@ project(engine)
 		add_compile_definitions( _UNICODE VK_NO_PROTOTYPES VK_USE_PLATFORM_WIN32_KHR WIN32_LEAN_AND_MEAN 
 		NOMINMAX QUIT_ESCAPE VULKAN_OBJ_TRACKER CP_WINDOWS_PLATFORM)
 	endif (WIN32)
+    if (UNIX)
+        add_compile_definitions( VK_NO_PROTOTYPES QUIT_ESCAPE VULKAN_OBJ_TRACKER CP_LINUX_PLATFORM)
+    endif (UNIX)
 
 	#making sure to add the common cpp flags, that are defined in the main cpp file
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_CXX_FLAGS}")
@@ -37,4 +44,8 @@ project(engine)
 
 	SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
+	if(WIN32)
 	target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+    elseif(UNIX)
+    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} X11 GL ${XCB_LIBRARIES} )
+    endif()
