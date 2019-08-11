@@ -247,6 +247,12 @@ class ThreeSizesPool final {
     // no hit in the cache, we need to allocate from the pool
     return allocateNew(sizeInByte, flags);
   }
+  float getMemoryUsage() const {
+	  double offset = m_stackPointerOffset;
+	  double range = m_poolSizeInByte;
+	  return static_cast<float>(offset/range);
+  
+  }
 
   // deleted copy constructors and assignment operator
   ThreeSizesPool(const ThreeSizesPool &) = delete;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CPEngine/core/events/event.h"
+#include "CPEngine/core/core.h"
 
 namespace cp::core{
 
@@ -20,12 +21,14 @@ public:
   EVENT_CLASS_TYPE(WindowResize)
   EVENT_CLASS_CATEGORY(EventCategoryApplication)
   const char* toString() const override {
-	  /*
-    std::stringstream s;
-    s << "WindowResizeEvent: " << m_width << "x" << m_height;
-    return s.str();
-	*/
-	  return nullptr;
+    char x[64];
+    sprintf_s(x, sizeof(x), "%i", m_width);
+    char y[64];
+    sprintf_s(y, sizeof(y), "%i", m_height);
+    const char *positionsString = STRING_POOL->concatenateFrame(x, y, ",");
+    const char *finalString =
+        STRING_POOL->concatenateFrame("WindowResizeEvent: ", positionsString);
+    return finalString;
   }
 
   inline unsigned int getWidth() const { return m_width; }

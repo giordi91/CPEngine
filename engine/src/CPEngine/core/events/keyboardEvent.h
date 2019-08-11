@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CPEngine/core/events/event.h"
-#include <sstream>
 
 namespace cp::core {
 class KeyboardPressEvent final : public Event {
@@ -10,13 +9,12 @@ public:
 
   EVENT_CLASS_TYPE(KeyPressed)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
-  const char* toString() const override {
-	  /*
-    std::stringstream s;
-    s << "KeyboardPressEvent: " << m_button;
-    return s.str();
-	*/
-	  return nullptr;
+  const char *toString() const override {
+
+    char buttonBuffer[32];
+    _itoa_s(m_button, buttonBuffer, 10);
+    return core::STRING_POOL->concatenateFrame("KeyboardPressEvent: ",
+                                               buttonBuffer);
   }
   uint32_t getKeyCode() const { return m_button; }
 
@@ -30,13 +28,11 @@ public:
 
   EVENT_CLASS_TYPE(KeyReleased)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
-  const char* toString() const override {
-	  /*
-    std::stringstream s;
-    s << "KeyboardReleaseEvent: " << m_button;
-    return s.str();
-	*/
-	  return nullptr;
+  const char *toString() const override {
+    char buttonBuffer[32];
+    _itoa_s(m_button, buttonBuffer, 10);
+    return core::STRING_POOL->concatenateFrame("KeyboardPressEvent: ",
+                                               buttonBuffer);
   }
 
   uint32_t getKeyCode() const { return m_button; }
@@ -47,17 +43,15 @@ private:
 
 class KeyTypeEvent final : public Event {
 public:
-	explicit KeyTypeEvent(const uint32_t button) : m_button(button) {}
+  explicit KeyTypeEvent(const uint32_t button) : m_button(button) {}
 
   EVENT_CLASS_TYPE(KeyTyped)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard)
-  const char* toString() const override {
-	  /*
-    std::stringstream s;
-    s << "Keyboard typed char: " << m_button;
-    return s.str();
-	*/
-	  return nullptr;
+  const char *toString() const override {
+    char buttonBuffer[32];
+    _itoa_s(m_button, buttonBuffer, 10);
+    return core::STRING_POOL->concatenateFrame("KeyboardPressEvent: ",
+                                               buttonBuffer);
   }
   inline uint32_t getKeyCode() const { return m_button; }
 

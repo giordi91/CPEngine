@@ -53,7 +53,7 @@ class StackAllocator final {
     assert(isAllocatorValid());
   };
 
-  float getUsedMemoryPercentage() const {
+  float getMemoryUsage() const {
     assert(isAllocatorValid());
     return (static_cast<float>(m_SP - m_start) /
             static_cast<float>(m_end - m_start));

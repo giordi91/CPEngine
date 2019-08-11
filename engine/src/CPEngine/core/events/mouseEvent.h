@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CPEngine/core/events/event.h"
-#include <sstream>
 
 namespace cp::core {
 class MouseMoveEvent final : public Event {
@@ -17,11 +16,9 @@ public:
     char y[64];
     sprintf_s(y, sizeof(y), "%f", m_posY);
     const char *positionsString = STRING_POOL->concatenateFrame(x, y, ",");
-    const char* finalString = STRING_POOL->concatenateFrame("MouseMoveEvent ", positionsString);
-	return finalString;
-
-    // s << "MouseMoveEvent: (" << m_posX << "," << m_posY << ")";
-    // return s.str();
+    const char *finalString =
+        STRING_POOL->concatenateFrame("MouseMoveEvent ", positionsString);
+    return finalString;
   }
   inline float getX() const { return m_posX; }
   inline float getY() const { return m_posY; }
@@ -39,10 +36,14 @@ public:
   EVENT_CLASS_TYPE(MouseScrolled)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryMouse)
   const char *toString() const override {
-    // std::stringstream s;
-    // s << "MouseScrollEvent: (" << m_offsetX << "," << m_offsetY << ")";
-    // return s.str();
-    return nullptr;
+    char x[64];
+    sprintf_s(x, sizeof(x), "%f", m_offsetX);
+    char y[64];
+    sprintf_s(y, sizeof(y), "%f", m_offsetY);
+    const char *positionsString = STRING_POOL->concatenateFrame(x, y, ",");
+    const char *finalString =
+        STRING_POOL->concatenateFrame("MouseScrolled ", positionsString);
+    return finalString;
   }
 
   inline float getOffsetX() const { return m_offsetX; }
@@ -63,26 +64,26 @@ public:
   EVENT_CLASS_TYPE(MouseButtonPressed)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryMouse)
   const char *toString() const override {
-    /*
-std::stringstream s;
-s << "MouseButtonPressEvent: ";
-switch (m_button) {
-case (MOUSE_BUTTONS_EVENT::LEFT): {
-s << "left";
-break;
-}
-case (MOUSE_BUTTONS_EVENT::RIGHT): {
-s << "right";
-break;
-}
-case (MOUSE_BUTTONS_EVENT::MIDDLE): {
-s << "middle";
-break;
-}
-}
-return s.str();
-  */
-    return nullptr;
+
+    const char *direction="";
+    switch (m_button) {
+    case (MOUSE_BUTTONS_EVENT::LEFT): {
+      direction = "left";
+      break;
+    }
+    case (MOUSE_BUTTONS_EVENT::RIGHT): {
+      direction = "right";
+      break;
+    }
+    case (MOUSE_BUTTONS_EVENT::MIDDLE): {
+      direction = "middle";
+      break;
+    }
+    }
+
+    const char *finalString =
+        STRING_POOL->concatenateFrame("MouseButtonPressEvent: ", direction);
+    return finalString;
   }
   inline MOUSE_BUTTONS_EVENT getMouseButton() const { return m_button; };
 
@@ -98,26 +99,25 @@ public:
   EVENT_CLASS_TYPE(MouseButtonReleased)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryMouse)
   const char *toString() const override {
-    /*
-std::stringstream s;
-s << "MouseButtonReleaseEvent: ";
-switch (m_button) {
-case (MOUSE_BUTTONS_EVENT::LEFT): {
-s << "left";
-break;
-}
-case (MOUSE_BUTTONS_EVENT::RIGHT): {
-s << "right";
-break;
-}
-case (MOUSE_BUTTONS_EVENT::MIDDLE): {
-s << "middle";
-break;
-}
-}
-return s.str();
-  */
-    return nullptr;
+    const char *button="";
+    switch (m_button) {
+    case (MOUSE_BUTTONS_EVENT::LEFT): {
+      button = "left";
+      break;
+    }
+    case (MOUSE_BUTTONS_EVENT::RIGHT): {
+      button = "right";
+      break;
+    }
+    case (MOUSE_BUTTONS_EVENT::MIDDLE): {
+      button = "middle";
+      break;
+    }
+    }
+
+    const char *finalString =
+        STRING_POOL->concatenateFrame("MouseButtonReleaseEvent: ", button);
+    return finalString;
   }
   inline MOUSE_BUTTONS_EVENT getMouseButton() const { return m_button; };
 

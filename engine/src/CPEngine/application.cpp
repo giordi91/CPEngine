@@ -1,6 +1,7 @@
 #include "CPEngine/application.h"
 #include "platform/windows/core/windowsWindow.h"
 #include "core/logging.h"
+#include "core/core.h"
 
 //#include "SirEngine/globals.h"
 //#include "SirEngine/graphics/graphicsCore.h"
@@ -70,6 +71,11 @@ void Application::run() {
     //      delete e;
     //    }
     //    currentQueue->clear();
+
+	//at the end of the frame we free memory that has been allocated
+	//for frame duration only, this can be for example the data for an
+	//envent
+	core::STRING_POOL->resetFrameMemory();
   }
 
   /*

@@ -213,6 +213,8 @@ class StringPool final {
   const char* convertFrame(const wchar_t* string);
   const wchar_t* convertWide(const char* string, const uint8_t flags = 0);
   const wchar_t* convertFrameWide(const char* string);
+  float getPersistantMemoryUsage() const {return m_pool.getMemoryUsage();}
+  float getFrameMemoryUsage() const {return m_stackAllocator.getMemoryUsage();}
 
  private:
   enum class STRING_TYPE { CHAR = 1, WCHAR = 2 };
