@@ -1,12 +1,8 @@
 #pragma once
 #include "CPEngine/core/window.h"
-//#include "Window.h"
-//#include "core.h"
-//
-//#include "SirEngine/events/applicationEvent.h"
-//#include "SirEngine/events/event.h"
-//#include "SirEngine/layerStack.h"
+#include "CPEngine/core/events/event.h"
 #include <vector>
+
 namespace cp {
 class Application {
 public:
@@ -14,18 +10,16 @@ public:
   virtual ~Application();
   virtual void run();
 
-  /*
-  void onEvent(Event &e);
-  void queueEventForEndOfFrame(Event *e);
-  void pushLayer(Layer *layer);
-  void pushOverlay(Layer *layer);
-  */
+  void onEvent(core::Event &e);
+  //void queueEventForEndOfFrame(core::Event *e);
+  //void pushLayer(Layer *layer);
+  //void pushOverlay(Layer *layer);
 
 private:
+bool onCloseWindow(core::WindowCloseEvent &e);
+bool onResizeWindow(core::WindowResizeEvent &e);
   /*
 void parseConfigFile();
-bool onCloseWindow(WindowCloseEvent &e);
-bool onResizeWindow(WindowResizeEvent &e);
 inline void flipEndOfFrameQueue() {
 m_queueEndOfFrameCounter = (m_queueEndOfFrameCounter + 1) % 2;
 m_queuedEndOfFrameEventsCurrent =
@@ -36,10 +30,10 @@ m_queuedEndOfFrameEventsCurrent =
 private:
   core::Window *m_window = nullptr;
   bool m_run = true;
-  /*
-std::vector<std::vector<Event *>> m_queuedEndOfFrameEvents;
-std::vector<Event *> *m_queuedEndOfFrameEventsCurrent;
+std::vector<std::vector<core::Event *>> m_queuedEndOfFrameEvents;
+std::vector<core::Event *> *m_queuedEndOfFrameEventsCurrent;
 uint32_t m_queueEndOfFrameCounter = 0;
+  /*
 LayerStack m_layerStack;
 Layer *imGuiLayer;
 Layer *graphicsLayer;

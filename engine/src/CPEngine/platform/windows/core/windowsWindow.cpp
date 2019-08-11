@@ -1,18 +1,13 @@
 
 #include "CPEngine/platform/windows/core/windowsWindow.h"
 
-//#include "SirEngine/events/applicationEvent.h"
-//#include "SirEngine/events/keyboardEvent.h"
-//#include "SirEngine/events/mouseEvent.h"
 #include "CPEngine/core/logging.h"
 
-#include <Windows.h>
 #include "CPEngine/core/core.h"
-
-//#include "SirEngine/events/shaderCompileEvent.h"
-//#include "SirEngine/graphics/graphicsCore.h"
-//#include "platform/windows/graphics/dx12/descriptorHeap.h"
-//#include "platform/windows/graphics/dx12/swapChain.h"
+#include "CPEngine/core/events/keyboardEvent.h"
+#include "CPEngine/core/events/mouseEvent.h"
+#include <Windows.h>
+#include <windowsx.h>
 
 namespace cp::windows {
 
@@ -30,47 +25,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT umessage, WPARAM wparam,
   switch (umessage) {
 
   case WM_QUIT: {
-    // WindowCloseEvent closeEvent;
-    // ASSERT_CALLBACK_AND_DISPATCH(closeEvent);
+    core::WindowCloseEvent closeEvent;
+    ASSERT_CALLBACK_AND_DISPATCH(closeEvent);
     return 0;
   }
   case WM_CLOSE: {
-    // WindowCloseEvent closeEvent;
-    // ASSERT_CALLBACK_AND_DISPATCH(closeEvent);
+    core::WindowCloseEvent closeEvent;
+    ASSERT_CALLBACK_AND_DISPATCH(closeEvent);
     return 0;
   }
   case WM_CHAR: {
     // You can also use ToAscii()+GetKeyboardState() to retrieve characters.
-    /*
-if (wparam > 0 && wparam < 0x10000) {
-
-// basic shortcut handling
-// 114 is r, we want to reload/recompile shader
-auto code = static_cast<unsigned int>(wparam);
-if (code == 114) {
-  RequestShaderCompileEvent e;
-  ASSERT_CALLBACK_AND_DISPATCH(e);
-  return 0;
-}
-KeyTypeEvent e{static_cast<unsigned int>(wparam)};
-ASSERT_CALLBACK_AND_DISPATCH(e);
-}
-  */
+    if (wparam > 0 && wparam < 0x10000) {
+      // basic shortcut handling
+      core::KeyTypeEvent e{static_cast<unsigned int>(wparam)};
+      ASSERT_CALLBACK_AND_DISPATCH(e);
+    }
     return 0;
   }
 
   case WM_SIZE: {
     // the reason for this check is because the window call a resize immediately
     // before the user has time to set the callback to the window if
-    /*
-auto callback = windowsApplicationHandle->getEventCallback();
-if (callback != nullptr) {
-unsigned int w = (UINT)LOWORD(lparam);
-unsigned int h = (UINT)HIWORD(lparam);
-WindowResizeEvent resizeEvent{w, h};
-callback(resizeEvent);
-}
-  */
+    auto callback = windowsApplicationHandle->getEventCallback();
+    if (callback != nullptr) {
+      auto w = uint32_t(LOWORD(lparam));
+      auto h = uint32_t(HIWORD(lparam));
+      core::WindowResizeEvent resizeEvent{w, h};
+      callback(resizeEvent);
+    }
     return 0;
   }
     // Check if a key has been pressed on the keyboard.
@@ -79,78 +62,73 @@ callback(resizeEvent);
     // if I wanted to do that seems like bit 30 of lparam is the one
     // giving you if the first press or a repeat, not sure how to get the
     //"lag" in before sending repeats.
-
-    /*
-auto code = static_cast<unsigned int>(wparam);
-KeyboardPressEvent e{code};
-ASSERT_CALLBACK_AND_DISPATCH(e);
-  */
+    auto code = static_cast<unsigned int>(wparam);
+    core::KeyboardPressEvent e{code};
+    ASSERT_CALLBACK_AND_DISPATCH(e);
 
     return 0;
   }
 
     // Check if a key has been released on the keyboard.
   case WM_KEYUP: {
-    /*
-KeyboardReleaseEvent e{static_cast<unsigned int>(wparam)};
+    core::KeyboardReleaseEvent e{static_cast<unsigned int>(wparam)};
 
 #ifdef QUIT_ESCAPE
-// here we hard-coded this behavior where if the VK_ESCAPE button
-// is pressed I want the message to be sent out as close window,
-// this is a personal preference
-if (wparam == VK_ESCAPE) {
-WindowCloseEvent closeEvent;
-ASSERT_CALLBACK_AND_DISPATCH(closeEvent);
-return 0;
-}
+    // here we hard-coded this behavior where if the VK_ESCAPE button
+    // is pressed I want the message to be sent out as close window,
+    // this is a personal preference
+    if (wparam == VK_ESCAPE) {
+      core::WindowCloseEvent closeEvent;
+      ASSERT_CALLBACK_AND_DISPATCH(closeEvent);
+      return 0;
+    }
 #endif
 
-ASSERT_CALLBACK_AND_DISPATCH(e);
-  */
+    ASSERT_CALLBACK_AND_DISPATCH(e);
     return 0;
   }
   case WM_LBUTTONDOWN: {
-    // MouseButtonPressEvent e{MOUSE_BUTTONS_EVENT::LEFT};
-    // ASSERT_CALLBACK_AND_DISPATCH(e);
+    core::MouseButtonPressEvent e{core::MOUSE_BUTTONS_EVENT::LEFT};
+    ASSERT_CALLBACK_AND_DISPATCH(e);
     return 0;
   }
   case WM_RBUTTONDOWN: {
-    // MouseButtonPressEvent e{MOUSE_BUTTONS_EVENT::RIGHT};
-    // ASSERT_CALLBACK_AND_DISPATCH(e);
+    core::MouseButtonPressEvent e{core::MOUSE_BUTTONS_EVENT::RIGHT};
+    ASSERT_CALLBACK_AND_DISPATCH(e);
     return 0;
   }
   case WM_MBUTTONDOWN: {
-    // MouseButtonPressEvent e{MOUSE_BUTTONS_EVENT::MIDDLE};
-    // ASSERT_CALLBACK_AND_DISPATCH(e);
+    core::MouseButtonPressEvent e{core::MOUSE_BUTTONS_EVENT::MIDDLE};
+    ASSERT_CALLBACK_AND_DISPATCH(e);
     return 0;
   }
   case WM_MOUSEWHEEL: {
-    //float movementY = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wparam));
+    auto movementY = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wparam));
     // side tilt of the scroll currently not supported, always 0.0f
-    // MouseScrollEvent e{0.0f, movementY};
-    // ASSERT_CALLBACK_AND_DISPATCH(e);
+    core::MouseScrollEvent e{0.0f, movementY};
+    ASSERT_CALLBACK_AND_DISPATCH(e);
     return 0;
   }
   case WM_LBUTTONUP: {
-    // MouseButtonReleaseEvent e{MOUSE_BUTTONS_EVENT::LEFT};
-    // ASSERT_CALLBACK_AND_DISPATCH(e);
+    core::MouseButtonReleaseEvent e{core::MOUSE_BUTTONS_EVENT::LEFT};
+    ASSERT_CALLBACK_AND_DISPATCH(e);
     return 0;
   }
   case WM_RBUTTONUP: {
-    // MouseButtonReleaseEvent e{MOUSE_BUTTONS_EVENT::RIGHT};
-    // ASSERT_CALLBACK_AND_DISPATCH(e);
+    core::MouseButtonReleaseEvent e{core::MOUSE_BUTTONS_EVENT::RIGHT};
+    ASSERT_CALLBACK_AND_DISPATCH(e);
     return 0;
   }
   case WM_MBUTTONUP: {
-    // MouseButtonReleaseEvent e{MOUSE_BUTTONS_EVENT::MIDDLE};
-    // ASSERT_CALLBACK_AND_DISPATCH(e);
+    core::MouseButtonReleaseEvent e{core::MOUSE_BUTTONS_EVENT::MIDDLE};
+    ASSERT_CALLBACK_AND_DISPATCH(e);
     return 0;
   }
   case WM_MOUSEMOVE: {
-    // float posX = static_cast<float>(GET_X_LPARAM(lparam));
-    // float posY = static_cast<float>(GET_Y_LPARAM(lparam));
-    // MouseMoveEvent e{posX, posY};
-    // ASSERT_CALLBACK_AND_DISPATCH(e);
+    float posX = static_cast<float>(GET_X_LPARAM(lparam));
+    float posY = static_cast<float>(GET_Y_LPARAM(lparam));
+    core::MouseMoveEvent e{posX, posY};
+    ASSERT_CALLBACK_AND_DISPATCH(e);
     return 0;
   }
 
@@ -194,7 +172,7 @@ WindowsWindow::WindowsWindow(const core::WindowProps &props) {
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
   wc.lpszMenuName = NULL;
-  const wchar_t* titleW = core::STRING_POOL->convertWide(props.title);
+  const wchar_t *titleW = core::STRING_POOL->convertWide(props.title);
   wc.lpszClassName = titleW;
   wc.cbSize = sizeof(WNDCLASSEX);
 
@@ -210,9 +188,9 @@ WindowsWindow::WindowsWindow(const core::WindowProps &props) {
   RECT wr{0, 0, (LONG)m_data.width, (LONG)m_data.height};
   // needed to create the window of the right size, or wont match the gui
   AdjustWindowRectEx(&wr, style, false, NULL);
-  m_hwnd = CreateWindowEx(0, titleW, titleW, style, 0, 0,
-                          wr.right - wr.left, wr.bottom - wr.top, NULL, NULL,
-                          GetModuleHandle(NULL), 0);
+  m_hwnd =
+      CreateWindowEx(0, titleW, titleW, style, 0, 0, wr.right - wr.left,
+                     wr.bottom - wr.top, NULL, NULL, GetModuleHandle(NULL), 0);
 
   // Bring the window up on the screen and set it as main focus.
   ShowWindow(m_hwnd, SW_SHOWDEFAULT);
@@ -230,7 +208,6 @@ WindowsWindow::WindowsWindow(const core::WindowProps &props) {
   //  SE_CORE_ERROR("FATAL: could not initialize graphics");
   //}
 }
-
 
 void WindowsWindow::onUpdate() {
 
@@ -253,10 +230,8 @@ void WindowsWindow::onResize(unsigned int width, unsigned int height) {
 
 unsigned int WindowsWindow::getWidth() const { return m_data.width; }
 unsigned int WindowsWindow::getHeight() const { return m_data.height; }
-/*
 void WindowsWindow::setEventCallback(const EventCallbackFn &callback) {
   m_callback = callback;
 }
-*/
 
 } // namespace cp::windows

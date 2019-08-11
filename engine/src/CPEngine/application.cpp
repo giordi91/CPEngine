@@ -10,7 +10,7 @@
 //#include "layers/imguiLayer.h"
 //#include <random>
 
-namespace cp{
+namespace cp {
 
 /*
 static const std::string CONFIG_PATH = "engineConfig.json";
@@ -32,43 +32,43 @@ void Application::parseConfigFile() {
 */
 Application::Application() {
 
-  //parseConfigFile();
+  // parseConfigFile();
 
   m_window = core::Window::create();
-  //m_window->setEventCallback([this](Event &e) -> void { this->onEvent(e); });
-  //m_queuedEndOfFrameEvents.resize(2);
-  //m_queuedEndOfFrameEvents[0].reserve(10);
-  //m_queuedEndOfFrameEvents[1].reserve(10);
-  //m_queuedEndOfFrameEventsCurrent = &m_queuedEndOfFrameEvents[0];
+  m_window->setEventCallback(
+      [this](core::Event &e) -> void { this->onEvent(e); });
+  // m_queuedEndOfFrameEvents.resize(2);
+  // m_queuedEndOfFrameEvents[0].reserve(10);
+  // m_queuedEndOfFrameEvents[1].reserve(10);
+  // m_queuedEndOfFrameEventsCurrent = &m_queuedEndOfFrameEvents[0];
 
-  //imGuiLayer = new ImguiLayer();
-  //graphicsLayer = new Graphics3DLayer();
-  //m_layerStack.pushLayer(graphicsLayer);
-  //m_layerStack.pushOverlayLayer(imGuiLayer);
-  //globals::APPLICATION = this;
-
+  // imGuiLayer = new ImguiLayer();
+  // graphicsLayer = new Graphics3DLayer();
+  // m_layerStack.pushLayer(graphicsLayer);
+  // m_layerStack.pushOverlayLayer(imGuiLayer);
+  // globals::APPLICATION = this;
 }
 
 Application::~Application() { delete m_window; }
 void Application::run() {
   while (m_run) {
-    //globals::LAST_FRAME_TIME_NS = globals::GAME_CLOCK.getDelta();
+    // globals::LAST_FRAME_TIME_NS = globals::GAME_CLOCK.getDelta();
     //++globals::TOTAL_NUMBER_OF_FRAMES;
     m_window->onUpdate();
-//    graphics::newFrame();
-//
-//    for (Layer *l : m_layerStack) {
-//      l->onUpdate();
-//    }
-//    graphics::dispatchFrame();
-//
-//    auto currentQueue = m_queuedEndOfFrameEventsCurrent;
-//    flipEndOfFrameQueue();
-//    for (auto e : (*currentQueue)) {
-//      onEvent(*e);
-//      delete e;
-//    }
-//    currentQueue->clear();
+    //    graphics::newFrame();
+    //
+    //    for (Layer *l : m_layerStack) {
+    //      l->onUpdate();
+    //    }
+    //    graphics::dispatchFrame();
+    //
+    //    auto currentQueue = m_queuedEndOfFrameEventsCurrent;
+    //    flipEndOfFrameQueue();
+    //    for (auto e : (*currentQueue)) {
+    //      onEvent(*e);
+    //      delete e;
+    //    }
+    //    currentQueue->clear();
   }
 
   /*
@@ -88,41 +88,51 @@ void Application::run() {
 void Application::queueEventForEndOfFrame(Event *e) {
   m_queuedEndOfFrameEventsCurrent->push_back(e);
 }
-void Application::onEvent(Event &e) {
+*/
+void Application::onEvent(core::Event &e) {
   // close event dispatch
-  SE_CORE_INFO("{0}", e);
-  EventDispatcher dispatcher(e);
-  dispatcher.dispatch<WindowCloseEvent>(
-      [this](WindowCloseEvent &e) -> bool { return (this->onCloseWindow(e)); });
+  // SE_CORE_INFO("{0}", e);
+  core::EventDispatcher dispatcher(e);
+  dispatcher.dispatch<core::WindowCloseEvent>(
+      [this](core::WindowCloseEvent &e) -> bool {
+        return (this->onCloseWindow(e));
+      });
   if (e.handled()) {
     return;
   }
-  dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent &e) -> bool {
-    return (this->onResizeWindow(e));
-  });
+  dispatcher.dispatch<core::WindowResizeEvent>(
+      [this](core::WindowResizeEvent &e) -> bool {
+        return (this->onResizeWindow(e));
+      });
 
   if (e.handled()) {
     return;
   }
+  /*
   for (auto it = m_layerStack.end(); it != m_layerStack.begin();) {
     (*--it)->onEvent(e);
     if (e.handled()) {
       break;
     }
   }
+  */
 }
-bool Application::onCloseWindow(WindowCloseEvent &e) {
+bool Application::onCloseWindow(core::WindowCloseEvent &) {
   // graphics::shutdown();
   m_run = false;
   return true;
 }
-bool Application::onResizeWindow(WindowResizeEvent &e) {
-  globals::SCREEN_WIDTH = e.getWidth();
-  globals::SCREEN_HEIGHT = e.getHeight();
+bool Application::onResizeWindow(core::WindowResizeEvent &e) {
 
-  m_window->onResize(globals::SCREEN_WIDTH, globals::SCREEN_HEIGHT);
-  graphics::onResize(globals::SCREEN_WIDTH, globals::SCREEN_HEIGHT);
+  // TODO: decide how to handle this kind of information like screen size, I was
+  // thinking to have render contexts to hanlde this with a camera etc
+  uint32_t w = e.getWidth();
+  uint32_t h = e.getHeight();
 
+  m_window->onResize(w, h);
+  // graphics::onResize(w, h);
+
+  /*
   // push the resize event to everyone in case is needed
   for (auto it = m_layerStack.end(); it != m_layerStack.begin();) {
     (*--it)->onEvent(e);
@@ -130,12 +140,14 @@ bool Application::onResizeWindow(WindowResizeEvent &e) {
       break;
     }
   }
+  */
   return true;
 }
 
+/*
 void Application::pushLayer(Layer *layer) { m_layerStack.pushLayer(layer); }
 void Application::pushOverlay(Layer *layer) {
   m_layerStack.pushOverlayLayer(layer);
 }
 */
-} // namespace SirEngine
+} // namespace cp
