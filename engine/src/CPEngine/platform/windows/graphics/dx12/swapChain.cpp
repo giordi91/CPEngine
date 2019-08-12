@@ -149,8 +149,6 @@ bool SwapChain::resize(FrameCommand *command, const int width,
 
   return true;
 }
-} // namespace cp::graphics::dx12
-} // namespace SirEngine
 */
 
 } // namespace cp::graphics::dx12

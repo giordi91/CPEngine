@@ -4,6 +4,7 @@
 #include "CPEngine/core/logging.h"
 #include "CPEngine/globals.h"
 #include "CPEngine/platform/windows/core/windowsWindow.h"
+#include "graphics/layers/graphics3DLayer.h"
 
 //#include "SirEngine/globals.h"
 //#include "SirEngine/graphics/graphicsCore.h"
@@ -43,8 +44,8 @@ Application::Application() {
   m_window->setEventCallback(
       [this](core::Event &e) -> void { this->onEvent(e); });
 
-  //now that the window is created we can crate a rendering context
-  //HARDCODED
+  // now that the window is created we can crate a rendering context
+  // HARDCODED
   graphics::RenderingContextCreationSettings creationSettings;
   creationSettings.graphicsAPI = graphics::GRAPHICS_API::DX12;
   creationSettings.window = m_window;
@@ -52,17 +53,14 @@ Application::Application() {
   m_renderingContext = graphics::RenderingContext::create(creationSettings);
   m_renderingContext->initializeGraphics();
 
-
-
-
   m_queuedEndOfFrameEvents.resize(2);
   m_queuedEndOfFrameEvents[0].reserve(10);
   m_queuedEndOfFrameEvents[1].reserve(10);
   m_queuedEndOfFrameEventsCurrent = &m_queuedEndOfFrameEvents[0];
 
   // imGuiLayer = new ImguiLayer();
-  // graphicsLayer = new Graphics3DLayer();
-  // m_layerStack.pushLayer(graphicsLayer);
+  graphicsLayer = new Graphics3DLayer();
+  m_layerStack.pushLayer(graphicsLayer);
   // m_layerStack.pushOverlayLayer(imGuiLayer);
 }
 
@@ -74,18 +72,18 @@ void Application::run() {
     m_window->onUpdate();
     //    graphics::newFrame();
     //
-    //    for (Layer *l : m_layerStack) {
-    //      l->onUpdate();
-    //    }
+    for (Layer *l : m_layerStack) {
+      l->onUpdate();
+    }
     //    graphics::dispatchFrame();
     //
-    //    auto currentQueue = m_queuedEndOfFrameEventsCurrent;
-    //    flipEndOfFrameQueue();
-    //    for (auto e : (*currentQueue)) {
-    //      onEvent(*e);
-    //      delete e;
-    //    }
-    //    currentQueue->clear();
+    auto currentQueue = m_queuedEndOfFrameEventsCurrent;
+    flipEndOfFrameQueue();
+    for (auto e : (*currentQueue)) {
+      onEvent(*e);
+      delete e;
+    }
+    currentQueue->clear();
 
     // at the end of the frame we free memory that has been allocated
     // for frame duration only, this can be for example the data for an
@@ -155,7 +153,6 @@ bool Application::onResizeWindow(core::WindowResizeEvent &e) {
   m_window->onResize(w, h);
   // graphics::onResize(w, h);
 
-  /*
   // push the resize event to everyone in case is needed
   for (auto it = m_layerStack.end(); it != m_layerStack.begin();) {
     (*--it)->onEvent(e);
@@ -163,14 +160,11 @@ bool Application::onResizeWindow(core::WindowResizeEvent &e) {
       break;
     }
   }
-  */
   return true;
 }
 
-/*
 void Application::pushLayer(Layer *layer) { m_layerStack.pushLayer(layer); }
 void Application::pushOverlay(Layer *layer) {
   m_layerStack.pushOverlayLayer(layer);
 }
-*/
 } // namespace cp

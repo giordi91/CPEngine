@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CPEngine/core/core.h"
 #include "CPEngine/core/events/event.h"
 
 namespace cp::core {
@@ -35,7 +36,9 @@ public:
 
   EVENT_CLASS_TYPE(MouseScrolled)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryMouse)
-  const char *toString() const override {
+
+  [[nodiscard]] const char *toString() const override {
+    // TODO add number conversion to string pool
     char x[64];
     sprintf(x, "%f", m_offsetX);
     char y[64];
@@ -63,9 +66,10 @@ public:
 
   EVENT_CLASS_TYPE(MouseButtonPressed)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryMouse)
-  const char *toString() const override {
 
-    const char *direction="";
+  [[nodiscard]] const char *toString() const override {
+
+    const char *direction = "";
     switch (m_button) {
     case (MOUSE_BUTTONS_EVENT::LEFT): {
       direction = "left";
@@ -98,8 +102,9 @@ public:
 
   EVENT_CLASS_TYPE(MouseButtonReleased)
   EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryMouse)
-  const char *toString() const override {
-    const char *button="";
+
+  [[nodiscard]] const char *toString() const override {
+    const char *button = "";
     switch (m_button) {
     case (MOUSE_BUTTONS_EVENT::LEFT): {
       button = "left";
