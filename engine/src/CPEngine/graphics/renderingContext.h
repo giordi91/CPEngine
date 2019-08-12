@@ -4,7 +4,7 @@
 namespace cp {
 
 namespace core {
-class Window;
+class BaseWindow;
 }
 
 namespace graphics {
@@ -22,13 +22,19 @@ struct APIConfig {
 struct RenderingContextCreationSettings {
   GRAPHICS_API graphicsAPI;
   APIConfig apiConfig;
-  core::Window *window;
+  core::BaseWindow *window;
 };
 
 class RenderingContext {
 
 public:
   virtual ~RenderingContext() = default;
+  //private copy and assignment
+  RenderingContext(const RenderingContext &) = delete;
+  RenderingContext &operator=(const RenderingContext &) = delete;
+
+
+
   static RenderingContext *
   create(const RenderingContextCreationSettings &settings);
   static bool isAPISupported(const GRAPHICS_API graphicsAPI);

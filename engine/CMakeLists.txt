@@ -46,7 +46,7 @@ project(engine)
 	SET(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
 	if(WIN32)
-	target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES})
+	target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} DXGI D3D12)
     elseif(UNIX)
     target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} X11 GL ${XCB_LIBRARIES} )
     endif()

@@ -2,7 +2,7 @@
 #include "CPEngine/core/logging.h"
 #include <cassert>
 #if CP_WINDOWS_PLATFORM
-#include "CPEngine/platform/windows/graphics/cpDx12.h"
+#include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
 #endif
 
 static const char *GRAPHICS_API_TO_NAME[] = {"Vulkan", "DirectX 12"};

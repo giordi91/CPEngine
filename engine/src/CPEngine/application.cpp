@@ -1,8 +1,9 @@
 #include "CPEngine/application.h"
 //#include "CPEngine/core/window.h"
+#include "CPEngine/core/core.h"
+#include "CPEngine/core/logging.h"
+#include "CPEngine/globals.h"
 #include "CPEngine/platform/windows/core/windowsWindow.h"
-#include "core/logging.h"
-#include "core/core.h"
 
 //#include "SirEngine/globals.h"
 //#include "SirEngine/graphics/graphicsCore.h"
@@ -36,20 +37,33 @@ void Application::parseConfigFile() {
 Application::Application() {
 
   // parseConfigFile();
+  globals::APPLICATION = this;
 
   m_window = core::BaseWindow::create();
   m_window->setEventCallback(
       [this](core::Event &e) -> void { this->onEvent(e); });
-  // m_queuedEndOfFrameEvents.resize(2);
-  // m_queuedEndOfFrameEvents[0].reserve(10);
-  // m_queuedEndOfFrameEvents[1].reserve(10);
-  // m_queuedEndOfFrameEventsCurrent = &m_queuedEndOfFrameEvents[0];
+
+  //now that the window is created we can crate a rendering context
+  //HARDCODED
+  graphics::RenderingContextCreationSettings creationSettings;
+  creationSettings.graphicsAPI = graphics::GRAPHICS_API::DX12;
+  creationSettings.window = m_window;
+  creationSettings.apiConfig = {};
+  m_renderingContext = graphics::RenderingContext::create(creationSettings);
+  m_renderingContext->initializeGraphics();
+
+
+
+
+  m_queuedEndOfFrameEvents.resize(2);
+  m_queuedEndOfFrameEvents[0].reserve(10);
+  m_queuedEndOfFrameEvents[1].reserve(10);
+  m_queuedEndOfFrameEventsCurrent = &m_queuedEndOfFrameEvents[0];
 
   // imGuiLayer = new ImguiLayer();
   // graphicsLayer = new Graphics3DLayer();
   // m_layerStack.pushLayer(graphicsLayer);
   // m_layerStack.pushOverlayLayer(imGuiLayer);
-  // globals::APPLICATION = this;
 }
 
 Application::~Application() { delete m_window; }
@@ -73,10 +87,10 @@ void Application::run() {
     //    }
     //    currentQueue->clear();
 
-	//at the end of the frame we free memory that has been allocated
-	//for frame duration only, this can be for example the data for an
-	//envent
-	core::STRING_POOL->resetFrameMemory();
+    // at the end of the frame we free memory that has been allocated
+    // for frame duration only, this can be for example the data for an
+    // envent
+    core::STRING_POOL->resetFrameMemory();
   }
 
   /*
@@ -100,7 +114,7 @@ void Application::queueEventForEndOfFrame(Event *e) {
 void Application::onEvent(core::Event &e) {
   // close event dispatch
   // SE_CORE_INFO("{0}", e);
-  logCoreInfo("{0}",e.toString());
+  logCoreInfo("{0}", e.toString());
   core::EventDispatcher dispatcher(e);
   dispatcher.dispatch<core::WindowCloseEvent>(
       [this](core::WindowCloseEvent &e) -> bool {
