@@ -7,11 +7,39 @@
 
 namespace cp::graphics {
 namespace dx12 {
+
+struct FrameCommand final {
+  ID3D12CommandAllocator *commandAllocator = nullptr;
+#if DXR_ENABLED
+  ID3D12GraphicsCommandList4 *commandList = nullptr;
+#else
+  ID3D12GraphicsCommandList2 *commandList = nullptr;
+#endif
+  bool isListOpen = false;
+};
+
+struct FrameResource final {
+  FrameCommand fc;
+  UINT64 fence = 0;
+};
+
 #if DXR_ENABLED
 typedef ID3D12Device5 D3D12DeviceType;
 #else
 typedef ID3D12Device3 D3D12DeviceType;
 #endif
+
+struct Dx12Resources {
+  D3D12DeviceType *device = nullptr;
+  ID3D12Debug *debugController = nullptr;
+  IDXGIFactory6 *dxgiFacotry = nullptr;
+  Dx12Adapter *adapter = nullptr;
+  ID3D12CommandQueue *globalCommandQueue = nullptr;
+  ID3D12Fence *globalFence = nullptr;
+  SwapChain *swapChain = nullptr;
+  FrameResource *frameResources = nullptr;
+  FrameResource *currentFrameResource = nullptr;
+};
 
 graphics::RenderingContext *
 createDx12RenderingContext(const RenderingContextCreationSettings &settings);
@@ -26,16 +54,11 @@ public:
   Dx12RenderingContext &operator=(const Dx12RenderingContext &) = delete;
 
   bool initializeGraphics() override;
+  inline Dx12Resources *getResources() { return &m_resources; }
 
 private:
-  D3D12DeviceType *m_device;
-  ID3D12Debug *m_debugController = nullptr;
-  IDXGIFactory6 *m_dxgiFacotry = nullptr;
-  Dx12Adapter *m_adapter = nullptr;
-  //SwapChain *m_swapChain = nullptr;
+  Dx12Resources m_resources;
   /*
-  FrameResource FRAME_RESOURCES[FRAME_BUFFERS_COUNT];
-  FrameResource *CURRENT_FRAME_RESOURCE = nullptr;
   TextureManagerDx12 *TEXTURE_MANAGER = nullptr;
   MeshManager *MESH_MANAGER = nullptr;
   IdentityManager *IDENTITY_MANAGER = nullptr;

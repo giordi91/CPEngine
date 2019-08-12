@@ -7,13 +7,9 @@
 #endif
 #include <windef.h>
 
-// forward declare
-// struct HINSTANCE;
-// struct HWND;
-
 namespace cp::windows {
 
-class WindowsWindow : public core::BaseWindow {
+class WindowsWindow final : public core::BaseWindow {
 
 public:
   explicit WindowsWindow(const core::WindowProps &props);
@@ -28,7 +24,6 @@ public:
 
   void setEventCallback(const EventCallbackFn &callback) override;
   inline EventCallbackFn getEventCallback() const { return m_callback; }
-  // void *getNativeWindow() const override { return m_hwnd; }
 
 private:
   HINSTANCE m_hinstance;

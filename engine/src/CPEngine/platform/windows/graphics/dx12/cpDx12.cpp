@@ -1,12 +1,25 @@
 #include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
+#include "CPEngine/application.h"
 #include "CPEngine/core/logging.h"
 #include "CPEngine/graphics/renderingContext.h"
 #include <cassert>
 #include <d3d12.h>
 #include <minwindef.h>
-#include "CPEngine/application.h"
 
 namespace cp::graphics::dx12 {
+
+void createFrameCommand(D3D12DeviceType *device, FrameCommand *fc) {
+  auto result = device->CreateCommandAllocator(
+      D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&fc->commandAllocator));
+  assert(SUCCEEDED(result));
+
+  result = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                     fc->commandAllocator, nullptr,
+                                     IID_PPV_ARGS(&fc->commandList));
+  assert(SUCCEEDED(result));
+  fc->commandList->Close();
+  fc->isListOpen = false;
+}
 
 graphics::RenderingContext *
 createDx12RenderingContext(const RenderingContextCreationSettings &settings) {
@@ -24,57 +37,62 @@ bool Dx12RenderingContext::initializeGraphics() {
 #if defined(DEBUG) || defined(_DEBUG)
   {
     const HRESULT result =
-        D3D12GetDebugInterface(IID_PPV_ARGS(&m_debugController));
+        D3D12GetDebugInterface(IID_PPV_ARGS(&m_resources.debugController));
     if (FAILED(result)) {
       return false;
     }
-    m_debugController->EnableDebugLayer();
+    m_resources.debugController->EnableDebugLayer();
     // ID3D12Debug1 *debug1;
     // DEBUG_CONTROLLER->QueryInterface(IID_PPV_ARGS(&debug1));
     // debug1->SetEnableGPUBasedValidation(true);
   }
 #endif
 
-  const HRESULT result = CreateDXGIFactory1(IID_PPV_ARGS(&m_dxgiFacotry));
+  HRESULT result = CreateDXGIFactory1(IID_PPV_ARGS(&m_resources.dxgiFacotry));
   if (FAILED(result)) {
     return false;
   }
 
-  m_adapter= new Dx12Adapter();
+  m_resources.adapter = new Dx12Adapter();
 #if DXR_ENABLED
   m_adapter->setFeture(AdapterFeature::DXR);
   m_adapter->setVendor(AdapterVendor::NVIDIA);
 #else
-  m_adapter->setFeature(ADAPTER_FEATURE::ANY);
-  m_adapter->setVendor(ADAPTER_VENDOR::ANY);
+  m_resources.adapter->setFeature(ADAPTER_FEATURE::ANY);
+  m_resources.adapter->setVendor(ADAPTER_VENDOR::ANY);
 #endif
-  const bool found = m_adapter->findBestDx12Adapter(m_dxgiFacotry);
+  const bool found =
+      m_resources.adapter->findBestDx12Adapter(m_resources.dxgiFacotry);
   assert(found && "could not find adapter matching features");
 
   // log the adapter used
-  auto *adapter = m_adapter->getDx12Adapter();
+  auto *adapter = m_resources.adapter->getDx12Adapter();
   DXGI_ADAPTER_DESC desc;
-    const HRESULT adapterDescRes = SUCCEEDED(adapter->GetDesc(&desc));
+  const HRESULT adapterDescRes = SUCCEEDED(adapter->GetDesc(&desc));
   assert(SUCCEEDED(adapterDescRes));
 
-  const char* toPrint = core::STRING_POOL->concatenateFrame("Initializing graphics with adapter: ",desc.Description,"");
+  const char *toPrint = core::STRING_POOL->concatenateFrame(
+      "Initializing graphics with adapter: ", desc.Description, "");
   logCoreInfo(toPrint);
 
-  /*
-  result = D3D12CreateDevice(m_adapter->getAdapter(), D3D_FEATURE_LEVEL_12_1,
-                             IID_PPV_ARGS(&DEVICE));
+  result = D3D12CreateDevice(m_resources.adapter->getDx12Adapter(),
+                             D3D_FEATURE_LEVEL_12_1,
+                             IID_PPV_ARGS(&m_resources.device));
   if (FAILED(result)) {
-    SE_CORE_ERROR("Could not create device with requested features");
+    logCoreError("Could not create device with requested features");
     // falling back to WARP device
     IDXGIAdapter *warpAdapter;
-    result = DXGI_FACTORY->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter));
+    result =
+        m_resources.dxgiFacotry->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter));
     if (FAILED(result)) {
       return false;
     }
 
     result = D3D12CreateDevice(warpAdapter, D3D_FEATURE_LEVEL_12_1,
-                               IID_PPV_ARGS(&DEVICE));
+                               IID_PPV_ARGS(&m_resources.device));
     if (FAILED(result)) {
+      logCoreError(
+          "Could not get device with requested features, not even warp");
       return false;
     }
   }
@@ -85,13 +103,13 @@ bool Dx12RenderingContext::initializeGraphics() {
   D3D12_FEATURE_DATA_FEATURE_LEVELS featureLevels = {};
   featureLevels.NumFeatureLevels = 1;
   featureLevels.pFeatureLevelsRequested = featureLevelsArray;
-  HRESULT r = DEVICE->CheckFeatureSupport(
+  HRESULT r = m_resources.device->CheckFeatureSupport(
       D3D12_FEATURE_FEATURE_LEVELS, &featureLevels, sizeof(featureLevels));
   assert(featureLevels.MaxSupportedFeatureLevel == D3D_FEATURE_LEVEL_12_1);
   assert(SUCCEEDED(r));
 
 #if DXR_ENABLED
-  if (m_adapter->getFeature() == AdapterFeature::DXR) {
+  if (m_resources.adapter->getFeature() == AdapterFeature::DXR) {
     D3D12_FEATURE_DATA_D3D12_OPTIONS5 opts5 = {};
     dx12::DEVICE->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &opts5,
                                       sizeof(opts5));
@@ -104,18 +122,27 @@ bool Dx12RenderingContext::initializeGraphics() {
   D3D12_COMMAND_QUEUE_DESC queueDesc = {};
   queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
   queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-  auto qresult = DEVICE->CreateCommandQueue(
-      &queueDesc, IID_PPV_ARGS(&GLOBAL_COMMAND_QUEUE));
+  const HRESULT qresult = m_resources.device->CreateCommandQueue(
+      &queueDesc, IID_PPV_ARGS(&m_resources.globalCommandQueue));
   if (FAILED(qresult)) {
     return false;
   }
 
-  result = DEVICE->CreateFence(0, D3D12_FENCE_FLAG_NONE,
-                               IID_PPV_ARGS(&GLOBAL_FENCE));
+  result = m_resources.device->CreateFence(
+      0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_resources.globalFence));
   if (FAILED(result)) {
+    logCoreError("Could not create DX12 fence");
     return false;
   }
 
+  if (m_resources.frameResources == nullptr) {
+    m_resources.frameResources = new FrameResource[m_settings.inFlightFrames];
+  }
+  for (uint32_t i = 0; i < m_settings.inFlightFrames; ++i) {
+    createFrameCommand(m_resources.device, &m_resources.frameResources[i].fc);
+  }
+  m_resources.currentFrameResource = &m_resources.frameResources[0];
+  /*
   // creating global heaps
   GLOBAL_CBV_SRV_UAV_HEAP = new DescriptorHeap();
   GLOBAL_CBV_SRV_UAV_HEAP->initializeAsCBVSRVUAV(1000);
@@ -126,11 +153,6 @@ bool Dx12RenderingContext::initializeGraphics() {
   GLOBAL_DSV_HEAP = new DescriptorHeap();
   GLOBAL_DSV_HEAP->initializeAsDSV(20);
 
-  for (int i = 0; i < FRAME_BUFFERS_COUNT; ++i) {
-    createFrameCommand(&FRAME_RESOURCES[i].fc);
-  }
-
-  CURRENT_FRAME_RESOURCE = &FRAME_RESOURCES[0];
 
   // initialize the managers
   // TODO add initialize to all managers for consistency and symmetry
@@ -162,14 +184,15 @@ bool Dx12RenderingContext::initializeGraphics() {
 
   ROOT_SIGNATURE_MANAGER = new RootSignatureManager();
   ROOT_SIGNATURE_MANAGER->loadSignaturesInFolder(
-      frameConcatenation(globals::DATA_SOURCE_PATH , "/processed/rs"));
+      frameConcatenation(globals::DATA_SOURCE_PATH, "/processed/rs"));
 
   SHADER_LAYOUT_REGISTRY = new dx12::ShadersLayoutRegistry();
 
   PSO_MANAGER = new PSOManager();
   PSO_MANAGER->init(dx12::DEVICE, SHADER_LAYOUT_REGISTRY,
                     ROOT_SIGNATURE_MANAGER, dx12::SHADER_MANAGER);
-  PSO_MANAGER->loadPSOInFolder(frameConcatenation(globals::DATA_SOURCE_PATH , "/pso"));
+  PSO_MANAGER->loadPSOInFolder(
+      frameConcatenation(globals::DATA_SOURCE_PATH, "/pso"));
 
   // mesh manager needs to load after pso and RS since it initialize material
   // types
@@ -177,28 +200,26 @@ bool Dx12RenderingContext::initializeGraphics() {
 
   MATERIAL_MANAGER->init();
   MATERIAL_MANAGER->loadTypesInFolder(
-      frameConcatenation(globals::DATA_SOURCE_PATH , "/materials/types"));
+      frameConcatenation(globals::DATA_SOURCE_PATH, "/materials/types"));
 
   globals::DEBUG_FRAME_DATA = new globals::DebugFrameData();
 
   const bool isHeadless = (wnd == nullptr) | (width == 0) | (height == 0);
 
   if (!isHeadless) {
-    // init swap chain
-    auto *windowWnd = static_cast<HWND>(wnd->getNativeWindow());
-
-    dx12::SWAP_CHAIN = new dx12::SwapChain();
-    dx12::SWAP_CHAIN->initialize(windowWnd, width, height);
-    dx12::flushCommandQueue(dx12::GLOBAL_COMMAND_QUEUE);
-    dx12::SWAP_CHAIN->resize(&dx12::CURRENT_FRAME_RESOURCE->fc, width, height);
-  } else {
-    SE_CORE_INFO("Requested HEADLESS client, no swapchain is initialized");
-  }
 
   return true;
-}
 */
+  // init swap chain
+  m_resources.swapChain = new dx12::SwapChain();
+  m_resources.swapChain->initialize(this);
+  // dx12::flushCommandQueue(dx12::GLOBAL_COMMAND_QUEUE);
+  // dx12::SWAP_CHAIN->resize(&dx12::CURRENT_FRAME_RESOURCE->fc, width, height);
+  //}
+  // else {
+  //  SE_CORE_INFO("Requested HEADLESS client, no swapchain is initialized");
+  //}
 
-return true;
+  return true;
 } // namespace cp::graphics::dx12
 } // namespace cp::graphics::dx12

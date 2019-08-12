@@ -1,26 +1,38 @@
+#include "CPEngine/platform/windows/graphics/dx12/swapChain.h"
+#include "CPEngine/platform/windows/core/windowsWindow.h"
+#include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
+#include <cassert>
+
+//#include "platform/windows/graphics/dx12/DX12.h"
 /*
-#include "platform/windows/graphics/dx12/swapChain.h"
-#include "platform/windows/graphics/dx12/DX12.h"
 #include "platform/windows/graphics/dx12/d3dx12.h"
 #include "platform/windows/graphics/dx12/descriptorHeap.h"
 #include <d3d12.h>
+*/
 
-namespace SirEngine {
-namespace dx12 {
+namespace cp::graphics::dx12 {
 
 namespace SwapChainConstants {
 const char *BACK_BUFFER_NAMES[3]{"backBuffer1", "backBuffer2", "backBuffer3"};
 
 }
 
+/*
 SwapChain::~SwapChain() {
+  int FRAME_BUFFERS_COUNT = 2;
   for (int i = 0; i < FRAME_BUFFERS_COUNT; ++i) {
-    dx12::TEXTURE_MANAGER->free(m_swapChainBuffersHandles[i]);
+    // dx12::TEXTURE_MANAGER->free(m_swapChainBuffersHandles[i]);
   }
-  dx12::TEXTURE_MANAGER->free(m_swapChainDepth);
+  // dx12::TEXTURE_MANAGER->free(m_swapChainDepth);
 }
-bool SwapChain::initialize(const HWND window, const int width,
-                           const int height) {
+*/
+bool SwapChain::initialize(Dx12RenderingContext *context) {
+
+  Dx12Resources *resources = context->getResources();
+  const auto &settings = context->getContextSettings();
+  const cp::core::NativeWindow *windowData = settings.window->getNativeWindow();
+  HWND window;
+  memcpy(&window, &windowData->data2, sizeof(HWND));
 
   // Check 4X MSAA quality support for our back buffer format.
   // All Direct3D 11 capable devices support 4X MSAA for all render
@@ -30,17 +42,18 @@ bool SwapChain::initialize(const HWND window, const int width,
   msQualityLevels.SampleCount = 4;
   msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
   msQualityLevels.NumQualityLevels = 0;
-  HRESULT result =
-      DEVICE->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
-                                  &msQualityLevels, sizeof(msQualityLevels));
+  HRESULT result = resources->device->CheckFeatureSupport(
+      D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msQualityLevels,
+      sizeof(msQualityLevels));
+  assert(SUCCEEDED(result));
 
   m_msaaQuality = msQualityLevels.NumQualityLevels;
   assert(m_msaaQuality > 0 && "Unexpected MSAA quality level.");
 
   // Release previous swap chain
   DXGI_SWAP_CHAIN_DESC swapDesc;
-  swapDesc.BufferDesc.Width = width;
-  swapDesc.BufferDesc.Height = height;
+  swapDesc.BufferDesc.Width = settings.width;
+  swapDesc.BufferDesc.Height = settings.height;
   swapDesc.BufferDesc.RefreshRate.Numerator = 0;
   swapDesc.BufferDesc.RefreshRate.Denominator = 1;
   swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -51,7 +64,7 @@ bool SwapChain::initialize(const HWND window, const int width,
   swapDesc.SampleDesc.Quality = m_4xMsaaState ? m_msaaQuality - 1 : 0;
   swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   // double buffering
-  swapDesc.BufferCount = FRAME_BUFFERS_COUNT;
+  swapDesc.BufferCount = settings.inFlightFrames;
   swapDesc.OutputWindow = window;
   swapDesc.Windowed = 1;
   swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -59,12 +72,13 @@ bool SwapChain::initialize(const HWND window, const int width,
 
   // the reason why we pass a queue is because when the swap chain flushes uses
   // the queue
-  result = DXGI_FACTORY->CreateSwapChain(GLOBAL_COMMAND_QUEUE, &swapDesc,
-                                         &m_swapChain);
+  result = resources->dxgiFacotry->CreateSwapChain(
+      resources->globalCommandQueue, &swapDesc, &m_swapChain);
 
   return FAILED(result);
 }
 
+/*
 bool SwapChain::resize(FrameCommand *command, const int width,
                        const int height) {
 
@@ -133,10 +147,10 @@ bool SwapChain::resize(FrameCommand *command, const int width,
   m_scissorRect = {0, 0, width, height};
   m_isInit = true;
 
-
-
   return true;
 }
-} // namespace dx12
+} // namespace cp::graphics::dx12
 } // namespace SirEngine
 */
+
+} // namespace cp::graphics::dx12

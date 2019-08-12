@@ -1,6 +1,6 @@
 #pragma once
-#include <cstdint>
 #include "CPEngine/core/events/applicationEvent.h"
+#include <cstdint>
 
 namespace cp::core {
 struct WindowProps {
@@ -12,6 +12,7 @@ struct WindowProps {
 
 struct NativeWindow {
   uint64_t data;
+  uint64_t data2;
 };
 
 class BaseWindow {
@@ -26,9 +27,12 @@ public:
   [[nodiscard]] virtual uint32_t getHeight() const = 0;
 
   virtual void setEventCallback(const EventCallbackFn &callback) = 0;
-  // virtual void *getNativeWindow() const = 0;
+  const NativeWindow *getNativeWindow() const { return &m_nativeWindow; };
 
   // This needs to be implemented per platform
   static BaseWindow *create(const WindowProps &props = WindowProps());
+
+protected:
+  NativeWindow m_nativeWindow;
 };
-} // namespace cp
+} // namespace cp::core

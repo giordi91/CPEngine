@@ -198,11 +198,13 @@ WindowsWindow::WindowsWindow(const core::WindowProps &props) {
   ShowCursor(true);
   core::STRING_POOL->free(titleW);
 
-  // initialize dx12
-  // bool result = graphics::initializeGraphics(this, m_data.width,
-  // m_data.height); if (!result) {
-  //  SE_CORE_ERROR("FATAL: could not initialize graphics");
-  //}
+  //update the native window
+  assert(sizeof(m_hinstance) == 8);
+  memcpy(&m_nativeWindow.data, &m_hinstance, sizeof(m_hinstance)); 
+  assert(sizeof(m_hwnd) == 8);
+  memcpy(&m_nativeWindow.data2, &m_hwnd, sizeof(m_hwnd)); 
+
+
 }
 
 void WindowsWindow::onUpdate() {

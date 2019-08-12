@@ -30,7 +30,7 @@ RenderingContext *createWindowsRenderingContext(
   case GRAPHICS_API::VULKAN: ;
       assert(!"Vulkan not yet supported ");
   default: ;
-      assert(!"Not supported api tried to be created");
+      assert(!"Not supported API requested");
       return nullptr;
   }
 
