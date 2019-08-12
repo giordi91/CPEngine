@@ -3,7 +3,7 @@
 #include "CPEngine/core/core.h"
 #include "CPEngine/core/logging.h"
 #include "CPEngine/globals.h"
-#include "CPEngine/platform/windows/core/windowsWindow.h"
+#include "CPEngine/core/window.h"
 #include "graphics/layers/graphics3DLayer.h"
 
 //#include "SirEngine/globals.h"

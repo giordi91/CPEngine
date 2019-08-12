@@ -1,3 +1,5 @@
+#if CP_WINDOWS_PLATFORM
+
 
 #include "CPEngine/platform/windows/graphics/dx12/descriptorHeap.h"
 #include "CPEngine/platform/windows/graphics/dx12/d3dx12.h"
@@ -246,3 +248,4 @@ UINT createRTVSRV(D3D12DeviceType* device,DescriptorHeap *heap, ID3D12Resource *
   return descriptorIndex;
 }
 } // namespace SirEngine
+#endif

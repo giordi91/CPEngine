@@ -1,3 +1,5 @@
+#if CP_WINDOWS_PLATFORM
+
 #include "CPEngine/platform/windows/graphics/dx12/swapChain.h"
 #include "CPEngine/platform/windows/core/windowsWindow.h"
 #include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
@@ -239,3 +241,4 @@ bool SwapChain::resize(FrameCommand *command, const int width,
 }
 
 } // namespace cp::graphics::dx12
+#endif

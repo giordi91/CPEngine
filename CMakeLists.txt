@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.13.0)
 
 project(CPEngine)
-# Set global property (all targets are impacted)
-set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 #preventing in source build
 if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
         message( FATAL_ERROR "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )

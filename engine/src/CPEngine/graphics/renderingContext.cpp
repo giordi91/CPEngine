@@ -9,7 +9,7 @@ static const char *GRAPHICS_API_TO_NAME[] = {"Vulkan", "DirectX 12"};
 
 namespace cp::graphics {
 
-
+#if CP_WINDOWS_PLATFORM
 RenderingContext *createWindowsRenderingContext(
     const RenderingContextCreationSettings &settings) {
 
@@ -36,6 +36,7 @@ RenderingContext *createWindowsRenderingContext(
 
 
 }
+#endif
 
 RenderingContext *
 RenderingContext::create(const RenderingContextCreationSettings &settings) {
@@ -48,5 +49,6 @@ bool RenderingContext::isAPISupported(const GRAPHICS_API graphicsAPI) {
 #if CP_WINDOWS_PLATFORM
   return graphicsAPI == GRAPHICS_API::DX12;
 #endif
+    return nullptr;
 }
 } // namespace cp::graphics

@@ -1,3 +1,6 @@
+
+#if CP_WINDOWS_PLATFORM
+
 #include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
 #include "CPEngine/application.h"
 #include "CPEngine/core/logging.h"
@@ -360,3 +363,4 @@ bool Dx12RenderingContext::dispatchFrame() {
   return true;
 }
 } // namespace cp::graphics::dx12
+#endif

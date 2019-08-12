@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.13.0)
 
-
 project(editor)   
 
-	find_package(Vulkan REQUIRED)
+	if(WIN32)
+	    find_package(Vulkan REQUIRED)
+	endif(WIN32)
     #looking for  files
     file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.h" "src/*.inl")
 

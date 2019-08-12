@@ -1,4 +1,6 @@
 
+#if CP_WINDOWS_PLATFORM
+
 #include "CPEngine/platform/windows/graphics/dx12/Dx12Adapter.h"
 #include "CPEngine/core/core.h"
 #include "CPEngine/core/logging.h"
@@ -56,3 +58,4 @@ bool Dx12Adapter::findBestDx12Adapter(IDXGIFactory4 *dxgiFactory,
   return dxgiDx12Adapter != nullptr;
 } // namespace dx12
 } // namespace cp::graphics::dx12
+#endif

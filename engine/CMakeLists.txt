@@ -5,15 +5,20 @@ include (${CMAKE_SOURCE_DIR}/cmake/cmakeUtils.cmake)
 
 project(engine)   
 
-	if(UNIX)
-    find_package(XCB REQUIRED)
-	endif(UNIX)
-	find_package(Vulkan REQUIRED)
+
+    if(APPLE)
+		MESSAGE(STATUS "Using MACOS")
+	elseif(UNIX)
+	    find_package(XCB REQUIRED)
+	    find_package(Vulkan REQUIRED)
+	elseif(WIN32)
+	    find_package(Vulkan REQUIRED)
+	endif()
 
     #looking for  files
     file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.h" "src/*.inl")
 
-	include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS} 
+	include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/src ${Vulkan_INCLUDE_DIRS}
 	"../external/headers"
 	)
 	#exteral headers
@@ -26,10 +31,10 @@ project(engine)
 	if (WIN32)
 		add_compile_definitions( _UNICODE VK_NO_PROTOTYPES VK_USE_PLATFORM_WIN32_KHR WIN32_LEAN_AND_MEAN 
 		NOMINMAX QUIT_ESCAPE VULKAN_OBJ_TRACKER CP_WINDOWS_PLATFORM  _CRT_SECURE_NO_WARNINGS)
-	endif (WIN32)
-    if (UNIX)
+	elseif(APPLE)
+    elseif (UNIX)
         add_compile_definitions( VK_NO_PROTOTYPES QUIT_ESCAPE VULKAN_OBJ_TRACKER CP_LINUX_PLATFORM)
-    endif (UNIX)
+    endif ()
 
 	#making sure to add the common cpp flags, that are defined in the main cpp file
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_CXX_FLAGS}")
@@ -47,6 +52,7 @@ project(engine)
 
 	if(WIN32)
 	target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} DXGI D3D12)
+	elseif(APPLE)
     elseif(UNIX)
-    target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} X11 GL ${XCB_LIBRARIES} )
+		target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARIES} X11 GL ${XCB_LIBRARIES} )
     endif()
