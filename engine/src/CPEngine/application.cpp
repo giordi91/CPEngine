@@ -46,10 +46,13 @@ Application::Application() {
 
   // now that the window is created we can crate a rendering context
   // HARDCODED
-  graphics::RenderingContextCreationSettings creationSettings;
+  graphics::RenderingContextCreationSettings creationSettings{};
+  creationSettings.width= m_window->getWidth();
+  creationSettings.height= m_window->getHeight();
   creationSettings.graphicsAPI = graphics::GRAPHICS_API::DX12;
   creationSettings.window = m_window;
   creationSettings.apiConfig = {};
+
   m_renderingContext = graphics::RenderingContext::create(creationSettings);
   m_renderingContext->initializeGraphics();
 
@@ -70,13 +73,13 @@ void Application::run() {
     // globals::LAST_FRAME_TIME_NS = globals::GAME_CLOCK.getDelta();
     //++globals::TOTAL_NUMBER_OF_FRAMES;
     m_window->onUpdate();
-    //    graphics::newFrame();
-    //
+    m_renderingContext->newFrame();
+
     for (Layer *l : m_layerStack) {
       l->onUpdate();
     }
-    //    graphics::dispatchFrame();
-    //
+    m_renderingContext->dispatchFrame(); 
+
     auto currentQueue = m_queuedEndOfFrameEventsCurrent;
     flipEndOfFrameQueue();
     for (auto e : (*currentQueue)) {

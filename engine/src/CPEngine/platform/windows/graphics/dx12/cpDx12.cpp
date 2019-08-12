@@ -2,11 +2,15 @@
 #include "CPEngine/application.h"
 #include "CPEngine/core/logging.h"
 #include "CPEngine/graphics/renderingContext.h"
+#include <CPEngine/globals.h>
 #include <cassert>
 #include <d3d12.h>
 #include <minwindef.h>
+#include "tempDefinition.h"
+#include "descriptorHeap.h"
 
 namespace cp::graphics::dx12 {
+
 
 void createFrameCommand(D3D12DeviceType *device, FrameCommand *fc) {
   auto result = device->CreateCommandAllocator(
@@ -21,10 +25,61 @@ void createFrameCommand(D3D12DeviceType *device, FrameCommand *fc) {
   fc->isListOpen = false;
 }
 
+inline HRESULT resetAllocatorAndList(FrameCommand *command) {
+
+  assert(!command->isListOpen);
+
+  // Reuse the memory associated with command recording.
+  // We can only reset when the associated command lists have finished
+  // execution on the GPU.
+  HRESULT result = command->commandAllocator->Reset();
+  assert(SUCCEEDED(result) && "failed resetting allocator");
+
+  // A command list can be reset after it has been added to the command queue
+  // via ExecuteCommandList.
+  // Reusing the command list reuses memory.
+  HRESULT result2 =
+      command->commandList->Reset(command->commandAllocator, nullptr);
+  assert(SUCCEEDED(result) && "failed resetting allocator");
+  command->isListOpen = SUCCEEDED(result) & SUCCEEDED(result2);
+  return result2;
+}
+
+void Dx12RenderingContext::flushGlobalCommandQueue() {
+    flushCommandQueue(m_resources.globalCommandQueue);
+}
+
+void Dx12RenderingContext::flushCommandQueue(ID3D12CommandQueue *queue) {
+  // Advance the fence value to mark commands up to this fence point.
+  ++m_internalCurrentFence;
+
+  // Add an instruction to the command queue to set a new fence point. Because
+  // we are on the GPU time line, the new fence point won't be set until the
+  // GPU finishes processing all the commands prior to this Signal().
+  HRESULT res = queue->Signal(m_resources.globalFence, m_internalCurrentFence);
+  assert(SUCCEEDED(res));
+  auto id = m_resources.globalFence->GetCompletedValue();
+  // Wait until the GPU has completed commands up to this fence point.
+  if (id < m_internalCurrentFence) {
+    const HANDLE eventHandle =
+        CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+
+    // Fire event when GPU hits current fence.
+    res = m_resources.globalFence->SetEventOnCompletion(m_internalCurrentFence,
+                                                        eventHandle);
+    assert(SUCCEEDED(res));
+
+    // Wait until the GPU hits current fence event is fired.
+    WaitForSingleObject(eventHandle, INFINITE);
+    CloseHandle(eventHandle);
+  }
+}
+
 graphics::RenderingContext *
 createDx12RenderingContext(const RenderingContextCreationSettings &settings) {
   return new Dx12RenderingContext(settings);
 }
+
 
 Dx12RenderingContext::Dx12RenderingContext(
     const RenderingContextCreationSettings &settings)
@@ -142,17 +197,17 @@ bool Dx12RenderingContext::initializeGraphics() {
     createFrameCommand(m_resources.device, &m_resources.frameResources[i].fc);
   }
   m_resources.currentFrameResource = &m_resources.frameResources[0];
-  /*
   // creating global heaps
-  GLOBAL_CBV_SRV_UAV_HEAP = new DescriptorHeap();
-  GLOBAL_CBV_SRV_UAV_HEAP->initializeAsCBVSRVUAV(1000);
+  m_resources.cbvSrvUavHeap= new DescriptorHeap();
+  m_resources.cbvSrvUavHeap->initializeAsCBVSRVUAV(m_resources.device,1000);
 
-  GLOBAL_RTV_HEAP = new DescriptorHeap();
-  GLOBAL_RTV_HEAP->initializeAsRTV(20);
+  m_resources.rtvHeap= new DescriptorHeap();
+  m_resources.rtvHeap->initializeAsRTV(m_resources.device,20);
 
-  GLOBAL_DSV_HEAP = new DescriptorHeap();
-  GLOBAL_DSV_HEAP->initializeAsDSV(20);
+  m_resources.dsvHeap= new DescriptorHeap();
+  m_resources.dsvHeap->initializeAsDSV(m_resources.device,20);
 
+  /*
 
   // initialize the managers
   // TODO add initialize to all managers for consistency and symmetry
@@ -213,8 +268,8 @@ bool Dx12RenderingContext::initializeGraphics() {
   // init swap chain
   m_resources.swapChain = new dx12::SwapChain();
   m_resources.swapChain->initialize(this);
-  // dx12::flushCommandQueue(dx12::GLOBAL_COMMAND_QUEUE);
-  // dx12::SWAP_CHAIN->resize(&dx12::CURRENT_FRAME_RESOURCE->fc, width, height);
+  flushCommandQueue(m_resources.globalCommandQueue);
+   m_resources.swapChain->resize(&m_resources.currentFrameResource->fc, m_settings.width, m_settings.height);
   //}
   // else {
   //  SE_CORE_INFO("Requested HEADLESS client, no swapchain is initialized");
@@ -222,4 +277,86 @@ bool Dx12RenderingContext::initializeGraphics() {
 
   return true;
 } // namespace cp::graphics::dx12
+bool Dx12RenderingContext::newFrame() {
+  // here we need to check which frame resource we are going to use
+  m_resources.currentFrameResource =
+      &m_resources.frameResources[m_internalResourceIndex];
+
+  // check if the resource has finished rendering if not we have to wait
+  if (m_resources.currentFrameResource->fence != 0 &&
+      m_resources.globalFence->GetCompletedValue() <
+          m_resources.currentFrameResource->fence) {
+    const HANDLE eventHandle =
+        CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+    const auto handleResult = m_resources.globalFence->SetEventOnCompletion(
+        m_resources.currentFrameResource->fence, eventHandle);
+    assert(SUCCEEDED(handleResult));
+    WaitForSingleObject(eventHandle, INFINITE);
+
+    CloseHandle(eventHandle);
+  }
+
+  resetAllocatorAndList(&m_resources.currentFrameResource->fc);
+
+  // at this point we know we are ready to go
+
+  auto *commandList = m_resources.currentFrameResource->fc.commandList;
+  //commandList->ClearRenderTargetView()
+  /*
+  // Clear the back buffer and depth buffer.
+  float gray[4] = {0.5f, 0.9f, 0.5f, 1.0f};
+  // Reuse the memory associated with command recording.
+  // We can only reset when the associated command lists have finished
+  // execution on the GPU.
+  // Indicate a state transition on the resource usage.
+  auto *commandList = dx12::CURRENT_FRAME_RESOURCE->fc.commandList;
+  D3D12_RESOURCE_BARRIER rtbarrier[1];
+
+  const TextureHandle backBufferH =
+      dx12::SWAP_CHAIN->currentBackBufferTexture();
+  int rtcounter = dx12::TEXTURE_MANAGER->transitionTexture2DifNeeded(
+      backBufferH, D3D12_RESOURCE_STATE_RENDER_TARGET, rtbarrier, 0);
+  if (rtcounter != 0) {
+    commandList->ResourceBarrier(rtcounter, rtbarrier);
+  }
+
+  // Set the viewport and scissor rect.  This needs to be reset whenever the
+  // command list is reset.
+  commandList->RSSetViewports(1, dx12::SWAP_CHAIN->getViewport());
+  commandList->RSSetScissorRects(1, dx12::SWAP_CHAIN->getScissorRect());
+
+  auto *heap = dx12::GLOBAL_CBV_SRV_UAV_HEAP->getResource();
+  commandList->SetDescriptorHeaps(1, &heap);
+  */
+
+  return true;
+}
+
+bool Dx12RenderingContext::dispatchFrame() {
+  D3D12_RESOURCE_BARRIER rtbarrier[1];
+  // finally transition the resource to be present
+  auto *commandList = m_resources.currentFrameResource->fc.commandList;
+
+  // TextureHandle backBufferH = dx12::SWAP_CHAIN->currentBackBufferTexture();
+  // int rtcounter = dx12::TEXTURE_MANAGER->transitionTexture2DifNeeded(
+  //    backBufferH, D3D12_RESOURCE_STATE_PRESENT, rtbarrier, 0);
+  // if (rtcounter != 0) {
+  //  commandList->ResourceBarrier(rtcounter, rtbarrier);
+  //}
+
+  // Done recording commands.
+  dx12::executeCommandList(m_resources.globalCommandQueue,
+                           &m_resources.currentFrameResource->fc);
+
+  m_resources.currentFrameResource->fence = ++m_internalCurrentFence;
+  m_resources.globalCommandQueue->Signal(m_resources.globalFence,
+                                         m_internalCurrentFence);
+  // swap the back and front buffers
+  m_resources.swapChain->present();
+  // bump the frame
+  ++globals::CURRENT_FRAME;
+  m_internalResourceIndex =
+      (m_internalResourceIndex + 1) % m_settings.inFlightFrames;
+  return true;
+}
 } // namespace cp::graphics::dx12

@@ -41,6 +41,9 @@ public:
   create(const RenderingContextCreationSettings &settings);
   static bool isAPISupported(const GRAPHICS_API graphicsAPI);
   virtual bool initializeGraphics() = 0;
+  virtual bool newFrame() = 0;
+  virtual bool dispatchFrame() = 0;
+
   inline const RenderingContextCreationSettings &getContextSettings() const {
     return m_settings;
   }

@@ -4,9 +4,12 @@
 #include "CPEngine/platform/windows/graphics/dx12/swapChain.h"
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <cassert>
+#include "tempDefinition.h"
 
 namespace cp::graphics {
 namespace dx12 {
+class DescriptorHeap;
 
 struct FrameCommand final {
   ID3D12CommandAllocator *commandAllocator = nullptr;
@@ -23,11 +26,6 @@ struct FrameResource final {
   UINT64 fence = 0;
 };
 
-#if DXR_ENABLED
-typedef ID3D12Device5 D3D12DeviceType;
-#else
-typedef ID3D12Device3 D3D12DeviceType;
-#endif
 
 struct Dx12Resources {
   D3D12DeviceType *device = nullptr;
@@ -39,10 +37,35 @@ struct Dx12Resources {
   SwapChain *swapChain = nullptr;
   FrameResource *frameResources = nullptr;
   FrameResource *currentFrameResource = nullptr;
+  DescriptorHeap* cbvSrvUavHeap = nullptr; 
+  DescriptorHeap* rtvHeap= nullptr; 
+  DescriptorHeap* dsvHeap= nullptr; 
 };
 
 graphics::RenderingContext *
 createDx12RenderingContext(const RenderingContextCreationSettings &settings);
+
+inline bool executeCommandList(ID3D12CommandQueue *queue,
+                               FrameCommand *command) {
+  assert(command->isListOpen);
+  HRESULT res = command->commandList->Close();
+  assert(SUCCEEDED(res) && "Error closing command list");
+  ID3D12CommandList *commandLists[] = {command->commandList};
+  queue->ExecuteCommandLists(1, commandLists);
+  bool succeded = SUCCEEDED(res);
+  assert(succeded);
+  command->isListOpen = false;
+  return succeded;
+}
+
+inline HRESULT resetCommandList(FrameCommand *command) {
+
+  assert(!command->isListOpen);
+  const HRESULT res = command->commandList->Reset(command->commandAllocator, nullptr);
+  assert(SUCCEEDED(res));
+  command->isListOpen = true;
+  return res;
+}
 
 class Dx12RenderingContext final : public RenderingContext {
 public:
@@ -54,10 +77,18 @@ public:
   Dx12RenderingContext &operator=(const Dx12RenderingContext &) = delete;
 
   bool initializeGraphics() override;
+  bool newFrame() override;
+  bool dispatchFrame() override;
   inline Dx12Resources *getResources() { return &m_resources; }
 
+  void flushGlobalCommandQueue();
 private:
-  Dx12Resources m_resources;
+  void flushCommandQueue(ID3D12CommandQueue *queue);
+
+private:
+  Dx12Resources m_resources{};
+  uint32_t m_internalResourceIndex = 0;
+  uint32_t m_internalCurrentFence = 0;
   /*
   TextureManagerDx12 *TEXTURE_MANAGER = nullptr;
   MeshManager *MESH_MANAGER = nullptr;
