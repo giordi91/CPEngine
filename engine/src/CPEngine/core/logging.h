@@ -16,6 +16,7 @@ void logCoreInfo(const char *message, const char *message2);
 void logCoreInfo(const char *message, uint32_t value1, uint32_t value2);
 void logCoreWarn(const char *message);
 void logCoreError(const char *message);
+void logCoreError(const char *message, const char* message2);
 
 void logTrace(const char *message);
 void logInfo(const char *message);
