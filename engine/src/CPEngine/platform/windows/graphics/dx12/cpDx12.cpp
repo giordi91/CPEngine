@@ -85,8 +85,8 @@ createDx12RenderingContext(const RenderingContextCreationSettings &settings,
 }
 
 Dx12RenderingContext::Dx12RenderingContext(
-    const RenderingContextCreationSettings &settings, uint32_t width,
-    uint32_t height)
+    const RenderingContextCreationSettings &settings, const uint32_t width,
+    const uint32_t height)
     : RenderingContext(settings, width, height) {
   logCoreInfo("Initializing a DirectX 12 context");
 }

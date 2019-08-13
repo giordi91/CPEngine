@@ -17,6 +17,8 @@ enum class GRAPHICS_API {
 struct APIConfig {
   bool vsync = false;
   uint32_t apiVersion = 0;
+  //here you can put per api flags
+  uint32_t genericApiFlags =0;
 };
 
 struct RenderingContextCreationSettings {
@@ -24,9 +26,9 @@ struct RenderingContextCreationSettings {
   APIConfig apiConfig;
   core::BaseWindow *window;
   uint32_t inFlightFrames = 2;
-  bool isHeadless = false;
   uint32_t width;
   uint32_t height;
+  bool isHeadless = false;
 };
 
 class RenderingContext {
