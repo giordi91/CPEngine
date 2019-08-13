@@ -38,18 +38,21 @@ public:
   RenderingContext &operator=(const RenderingContext &) = delete;
 
   static RenderingContext *
-  create(const RenderingContextCreationSettings &settings);
+  create(const RenderingContextCreationSettings &settings, uint32_t width,
+         uint32_t height);
   static bool isAPISupported(const GRAPHICS_API graphicsAPI);
   virtual bool initializeGraphics() = 0;
   virtual bool newFrame() = 0;
   virtual bool dispatchFrame() = 0;
+  virtual bool resize(uint32_t width, uint32_t height) = 0;
 
   inline const RenderingContextCreationSettings &getContextSettings() const {
     return m_settings;
   }
 
 protected:
-  explicit RenderingContext(const RenderingContextCreationSettings &settings)
+  explicit RenderingContext(const RenderingContextCreationSettings &settings,
+                            uint32_t width, uint32_t height)
       : m_settings(settings){};
   RenderingContextCreationSettings m_settings;
 };

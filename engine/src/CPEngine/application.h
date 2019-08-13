@@ -8,6 +8,12 @@
 
 namespace cp {
 
+struct RuntimeApplicationData {
+  uint32_t currentFrame = 0;
+  uint32_t windowWidth = 0;
+  uint32_t windowHeight = 0;
+};
+
 class Application {
 public:
   Application();
@@ -18,10 +24,16 @@ public:
 
   virtual void run();
 
+  //getters
+  const RuntimeApplicationData* getRuntimeDataReadOnly() const {return &m_runtimeData;}
+  RuntimeApplicationData* getRuntimeData() {return &m_runtimeData;}
+
+  //layer event stuff
   void onEvent(core::Event &e);
   void queueEventForEndOfFrame(core::Event *e);
   void pushLayer(Layer *layer);
   void pushOverlay(Layer *layer);
+
 
 private:
   bool onCloseWindow(core::WindowCloseEvent &e);
@@ -44,6 +56,7 @@ private:
   graphics::RenderingContext *m_renderingContext;
   LayerStack m_layerStack;
   Layer *graphicsLayer;
+  RuntimeApplicationData m_runtimeData;
 };
 
 // To be implemented by the client

@@ -21,7 +21,7 @@ public:
 
   virtual ~BaseWindow() = default;
   virtual void onUpdate() = 0;
-  virtual void onResize(uint32_t width, unsigned int height) = 0;
+  virtual bool onResize(uint32_t width, unsigned int height) = 0;
 
   [[nodiscard]] virtual uint32_t getWidth() const = 0;
   [[nodiscard]] virtual uint32_t getHeight() const = 0;

@@ -221,9 +221,10 @@ void WindowsWindow::onUpdate() {
   }
 }
 
-void WindowsWindow::onResize(unsigned int width, unsigned int height) {
+bool WindowsWindow::onResize(unsigned int width, unsigned int height) {
   m_data.width = width;
   m_data.height = height;
+  return true;
 }
 
 unsigned int WindowsWindow::getWidth() const { return m_data.width; }

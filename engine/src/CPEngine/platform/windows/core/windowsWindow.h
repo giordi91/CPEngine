@@ -15,7 +15,7 @@ public:
   explicit WindowsWindow(const core::WindowProps &props);
   virtual ~WindowsWindow() = default;
   void onUpdate() override;
-  void onResize(unsigned int width, unsigned int height) override;
+  bool onResize(unsigned int width, unsigned int height) override;
 
   uint32_t getWidth() const override;
   uint32_t getHeight() const override;

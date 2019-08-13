@@ -2,8 +2,8 @@
 //#include "CPEngine/core/window.h"
 #include "CPEngine/core/core.h"
 #include "CPEngine/core/logging.h"
-#include "CPEngine/globals.h"
 #include "CPEngine/core/window.h"
+#include "CPEngine/globals.h"
 #include "graphics/layers/graphics3DLayer.h"
 
 //#include "SirEngine/globals.h"
@@ -40,20 +40,30 @@ Application::Application() {
   // parseConfigFile();
   globals::APPLICATION = this;
 
-  m_window = core::BaseWindow::create();
+  // TODO HARDCODED: this sould be comping from parse config file
+  core::WindowProps windowProperty{};
+  windowProperty.width = 1280;
+  windowProperty.height = 720;
+  windowProperty.title = "editor";
+  m_window = core::BaseWindow::create(windowProperty);
   m_window->setEventCallback(
       [this](core::Event &e) -> void { this->onEvent(e); });
+
+  // update the runtime data
+  m_runtimeData.windowWidth = windowProperty.width;
+  m_runtimeData.windowHeight = windowProperty.height;
 
   // now that the window is created we can crate a rendering context
   // HARDCODED
   graphics::RenderingContextCreationSettings creationSettings{};
-  creationSettings.width= m_window->getWidth();
-  creationSettings.height= m_window->getHeight();
+  creationSettings.width = m_runtimeData.windowWidth;
+  creationSettings.height = m_runtimeData.windowHeight;
   creationSettings.graphicsAPI = graphics::GRAPHICS_API::DX12;
   creationSettings.window = m_window;
   creationSettings.apiConfig = {};
 
-  m_renderingContext = graphics::RenderingContext::create(creationSettings);
+  m_renderingContext = graphics::RenderingContext::create(
+      creationSettings, creationSettings.width, creationSettings.height);
   m_renderingContext->initializeGraphics();
 
   m_queuedEndOfFrameEvents.resize(2);
@@ -78,7 +88,7 @@ void Application::run() {
     for (Layer *l : m_layerStack) {
       l->onUpdate();
     }
-    m_renderingContext->dispatchFrame(); 
+    m_renderingContext->dispatchFrame();
 
     auto currentQueue = m_queuedEndOfFrameEventsCurrent;
     flipEndOfFrameQueue();
@@ -107,14 +117,12 @@ void Application::run() {
   graphics::shutdownGraphics();
   */
 }
-/*
-void Application::queueEventForEndOfFrame(Event *e) {
+void Application::queueEventForEndOfFrame(core::Event *e) {
   m_queuedEndOfFrameEventsCurrent->push_back(e);
 }
-*/
+
 void Application::onEvent(core::Event &e) {
-  // close event dispatch
-  // SE_CORE_INFO("{0}", e);
+  // we are going to explicitly handle resize event and close event
   logCoreInfo("{0}", e.toString());
   core::EventDispatcher dispatcher(e);
   dispatcher.dispatch<core::WindowCloseEvent>(
@@ -132,14 +140,14 @@ void Application::onEvent(core::Event &e) {
   if (e.handled()) {
     return;
   }
-  /*
+
+  // then we forward it to the layer stack
   for (auto it = m_layerStack.end(); it != m_layerStack.begin();) {
     (*--it)->onEvent(e);
     if (e.handled()) {
       break;
     }
   }
-  */
 }
 bool Application::onCloseWindow(core::WindowCloseEvent &) {
   // graphics::shutdown();
@@ -150,11 +158,20 @@ bool Application::onResizeWindow(core::WindowResizeEvent &e) {
 
   // TODO: decide how to handle this kind of information like screen size, I was
   // thinking to have render contexts to hanlde this with a camera etc
-  uint32_t w = e.getWidth();
-  uint32_t h = e.getHeight();
+  m_runtimeData.windowWidth = e.getWidth();
+  m_runtimeData.windowHeight = e.getHeight();
 
-  m_window->onResize(w, h);
-  // graphics::onResize(w, h);
+  if (!m_window->onResize(m_runtimeData.windowWidth,
+                          m_runtimeData.windowHeight)) {
+    logCoreError("Error in resizing the window");
+    return false;
+  }
+
+  if (!m_renderingContext->resize(m_runtimeData.windowWidth,
+                                  m_runtimeData.windowHeight)) {
+    logCoreError("Error in resizing the contest");
+    return false;
+  }
 
   // push the resize event to everyone in case is needed
   for (auto it = m_layerStack.end(); it != m_layerStack.begin();) {

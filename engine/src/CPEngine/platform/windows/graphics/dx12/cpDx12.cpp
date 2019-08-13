@@ -79,13 +79,15 @@ void Dx12RenderingContext::flushCommandQueue(ID3D12CommandQueue *queue) {
 }
 
 graphics::RenderingContext *
-createDx12RenderingContext(const RenderingContextCreationSettings &settings) {
-  return new Dx12RenderingContext(settings);
+createDx12RenderingContext(const RenderingContextCreationSettings &settings,
+                           const uint32_t width, const uint32_t height) {
+  return new Dx12RenderingContext(settings, width, height);
 }
 
 Dx12RenderingContext::Dx12RenderingContext(
-    const RenderingContextCreationSettings &settings)
-    : RenderingContext(settings) {
+    const RenderingContextCreationSettings &settings, uint32_t width,
+    uint32_t height)
+    : RenderingContext(settings, width, height) {
   logCoreInfo("Initializing a DirectX 12 context");
 }
 
@@ -118,8 +120,7 @@ bool Dx12RenderingContext::initializeGraphics() {
   m_adapter->setFeature(ADAPTER_FEATURE::ANY);
   m_adapter->setVendor(ADAPTER_VENDOR::ANY);
 #endif
-  const bool found =
-      m_adapter->findBestDx12Adapter(m_dxgiFactory);
+  const bool found = m_adapter->findBestDx12Adapter(m_dxgiFactory);
   assert(found && "could not find adapter matching features");
 
   // log the adapter used
@@ -132,15 +133,14 @@ bool Dx12RenderingContext::initializeGraphics() {
       "Initializing graphics with adapter: ", desc.Description, "");
   logCoreInfo(toPrint);
 
-  result = D3D12CreateDevice(m_adapter->getDx12Adapter(),
-                             D3D_FEATURE_LEVEL_12_1,
-                             IID_PPV_ARGS(&m_resources.device));
+  result =
+      D3D12CreateDevice(m_adapter->getDx12Adapter(), D3D_FEATURE_LEVEL_12_1,
+                        IID_PPV_ARGS(&m_resources.device));
   if (FAILED(result)) {
     logCoreError("Could not create device with requested features");
     // falling back to WARP device
     IDXGIAdapter *warpAdapter;
-    result =
-        m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter));
+    result = m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter));
     if (FAILED(result)) {
       return false;
     }
@@ -271,6 +271,7 @@ bool Dx12RenderingContext::initializeGraphics() {
   m_resources.swapChain = new dx12::SwapChain();
   m_resources.swapChain->initialize(this);
   flushCommandQueue(m_resources.globalCommandQueue);
+
   m_resources.swapChain->resize(&m_resources.currentFrameResource->fc,
                                 m_settings.width, m_settings.height);
   //}
@@ -299,8 +300,8 @@ bool Dx12RenderingContext::newFrame() {
     CloseHandle(eventHandle);
   }
 
-  //resetting the command list and the allocator so is 
-  //ready to be filled up again
+  // resetting the command list and the allocator so is
+  // ready to be filled up again
   resetAllocatorAndList(&m_resources.currentFrameResource->fc);
 
   auto *commandList = m_resources.currentFrameResource->fc.commandList;
@@ -315,17 +316,17 @@ bool Dx12RenderingContext::newFrame() {
       backBuffer, D3D12_RESOURCE_STATE_PRESENT,
       D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    commandList->ResourceBarrier(1, rtbarrier);
+  commandList->ResourceBarrier(1, rtbarrier);
 
   // Set the viewport and scissor rect.  This needs to be reset whenever the
   // command list is reset.
   commandList->RSSetViewports(1, m_resources.swapChain->getViewport());
   commandList->RSSetScissorRects(1, m_resources.swapChain->getScissorRect());
 
-  //temporary color clear
+  // temporary color clear
   float gray[4] = {0.5f, 0.9f, 0.5f, 1.0f};
-  auto backBufferDescriptor =m_resources.swapChain->currentBackBufferView();
-  commandList->ClearRenderTargetView(backBufferDescriptor,gray,0,nullptr);
+  auto backBufferDescriptor = m_resources.swapChain->currentBackBufferView();
+  commandList->ClearRenderTargetView(backBufferDescriptor, gray, 0, nullptr);
 
   auto *heap = m_resources.cbvSrvUavHeap->getResource();
   commandList->SetDescriptorHeaps(1, &heap);
@@ -338,7 +339,8 @@ bool Dx12RenderingContext::dispatchFrame() {
   // finally transition the resource to be present
   auto *commandList = m_resources.currentFrameResource->fc.commandList;
 
-  ID3D12Resource* backBuffer = m_resources.swapChain->currentBackBufferTexture();
+  ID3D12Resource *backBuffer =
+      m_resources.swapChain->currentBackBufferTexture();
   rtbarrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(
       backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET,
       D3D12_RESOURCE_STATE_PRESENT);
@@ -365,5 +367,11 @@ bool Dx12RenderingContext::dispatchFrame() {
       (m_internalResourceIndex + 1) % m_settings.inFlightFrames;
   return true;
 }
+
+bool Dx12RenderingContext::resize(const uint32_t width, const uint32_t height) {
+  return m_resources.swapChain->resize(&m_resources.currentFrameResource->fc,
+                                       width, height);
+}
+
 } // namespace cp::graphics::dx12
 #endif

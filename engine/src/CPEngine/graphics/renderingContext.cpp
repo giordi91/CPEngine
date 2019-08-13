@@ -10,8 +10,9 @@ static const char *GRAPHICS_API_TO_NAME[] = {"Vulkan", "DirectX 12"};
 namespace cp::graphics {
 
 #if CP_WINDOWS_PLATFORM
-RenderingContext *createWindowsRenderingContext(
-    const RenderingContextCreationSettings &settings) {
+RenderingContext *
+createWindowsRenderingContext(const RenderingContextCreationSettings &settings,
+                              uint32_t width, uint32_t height) {
 
   if (!RenderingContext::isAPISupported(settings.graphicsAPI)) {
     logCoreError(
@@ -20,28 +21,25 @@ RenderingContext *createWindowsRenderingContext(
     return nullptr;
   }
 
-  //API is supported we can create the context based on the given API
-  switch(settings.graphicsAPI)
-  {
-  case (GRAPHICS_API::DX12):
-    {
-      return dx12::createDx12RenderingContext(settings);
-    }
-  case GRAPHICS_API::VULKAN: ;
-      assert(!"Vulkan not yet supported ");
-  default: ;
-      assert(!"Not supported API requested");
-      return nullptr;
+  // API is supported we can create the context based on the given API
+  switch (settings.graphicsAPI) {
+  case (GRAPHICS_API::DX12): {
+    return dx12::createDx12RenderingContext(settings,width,height);
   }
-
-
+  case GRAPHICS_API::VULKAN:;
+    assert(!"Vulkan not yet supported ");
+  default:;
+    assert(!"Not supported API requested");
+    return nullptr;
+  }
 }
 #endif
 
 RenderingContext *
-RenderingContext::create(const RenderingContextCreationSettings &settings) {
+RenderingContext::create(const RenderingContextCreationSettings &settings,
+                              uint32_t width, uint32_t height) {
 #if CP_WINDOWS_PLATFORM
-  return createWindowsRenderingContext(settings);
+  return createWindowsRenderingContext(settings,width,height);
 #endif
 }
 
@@ -49,6 +47,6 @@ bool RenderingContext::isAPISupported(const GRAPHICS_API graphicsAPI) {
 #if CP_WINDOWS_PLATFORM
   return graphicsAPI == GRAPHICS_API::DX12;
 #endif
-    return nullptr;
+  return nullptr;
 }
 } // namespace cp::graphics

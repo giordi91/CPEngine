@@ -38,7 +38,8 @@ struct Dx12Resources {
 };
 
 graphics::RenderingContext *
-createDx12RenderingContext(const RenderingContextCreationSettings &settings);
+createDx12RenderingContext(const RenderingContextCreationSettings &settings,
+                           uint32_t width, uint32_t height);
 
 inline bool executeCommandList(ID3D12CommandQueue *queue,
                                FrameCommand *command) {
@@ -66,7 +67,8 @@ inline HRESULT resetCommandList(FrameCommand *command) {
 class Dx12RenderingContext final : public RenderingContext {
 public:
   explicit Dx12RenderingContext(
-      const RenderingContextCreationSettings &settings);
+      const RenderingContextCreationSettings &settings, uint32_t width,
+      uint32_t height);
   ~Dx12RenderingContext() = default;
   // private copy and assignment
   Dx12RenderingContext(const Dx12RenderingContext &) = delete;
@@ -75,6 +77,8 @@ public:
   bool initializeGraphics() override;
   bool newFrame() override;
   bool dispatchFrame() override;
+  bool resize(uint32_t width, uint32_t height) override;
+
   inline Dx12Resources *getResources() { return &m_resources; }
   inline IDXGIFactory6 *getFactory() const { return m_dxgiFactory; }
 
@@ -106,4 +110,4 @@ private:
   */
 };
 
-} // namespace cp::graphics::x12
+} // namespace cp::graphics::dx12
