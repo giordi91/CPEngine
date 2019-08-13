@@ -22,7 +22,8 @@ const char *BACK_BUFFER_NAMES[3]{"backBuffer1", "backBuffer2", "backBuffer3"};
 
 }
 
-DescriptorPair initializeFromResourceDx12(D3D12DeviceType* device, ID3D12Resource *resource,
+DescriptorPair initializeFromResourceDx12(D3D12DeviceType *device,
+                                          ID3D12Resource *resource,
                                           const char *name,
                                           const D3D12_RESOURCE_STATES state,
                                           DescriptorHeap *heap) {
@@ -31,7 +32,7 @@ DescriptorPair initializeFromResourceDx12(D3D12DeviceType* device, ID3D12Resourc
   uint32_t index;
 
   DescriptorPair pair;
-  createRTVSRV(device,heap, resource, pair);
+  createRTVSRV(device, heap, resource, pair);
 
   // m_nameToHandle[name] = handle;
   // return handle;
@@ -151,7 +152,7 @@ bool SwapChain::initialize(Dx12RenderingContext *context) {
 
   // the reason why we pass a queue is because when the swap chain flushes uses
   // the queue
-  result = resources->dxgiFacotry->CreateSwapChain(
+  result = m_renderingContext->getFactory()->CreateSwapChain(
       resources->globalCommandQueue, &swapDesc, &m_swapChain);
 
   return FAILED(result);
@@ -171,6 +172,7 @@ bool SwapChain::resize(FrameCommand *command, const int width,
   if (m_isInit) {
     for (int i = 0; i < settings.inFlightFrames; ++i) {
       // dx12::TEXTURE_MANAGER->free(m_swapChainBuffersHandles[i]);
+      m_swapChainBuffersHandles[i]->Release();
     }
   }
 
@@ -183,12 +185,9 @@ bool SwapChain::resize(FrameCommand *command, const int width,
   // resetting the current back buffer
   m_currentBackBuffer = 0;
 
-  // CD3DX12_CPU_DESCRIPTOR_HANDLE
-  // rtvHeapHandle(GLOBAL_RTV_HEAP->getCPUStart());
-
   for (UINT i = 0; i < settings.inFlightFrames; i++) {
     ID3D12Resource *resource;
-    HRESULT res = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
+    const HRESULT res = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&resource));
     assert(SUCCEEDED(res));
 
     assert(i < 3 && "not enough back buffer names");
@@ -198,7 +197,8 @@ bool SwapChain::resize(FrameCommand *command, const int width,
     m_swapChainBuffersHandles[i] = resource;
 
     m_swapChainBuffersDescriptors[i] = initializeFromResourceDx12(
-        resources->device,resource, "", D3D12_RESOURCE_STATE_PRESENT, resources->rtvHeap);
+        resources->device, resource, "", D3D12_RESOURCE_STATE_COMMON,
+        resources->rtvHeap);
   }
 
   // freeing depth and re-creating it;
@@ -208,8 +208,8 @@ bool SwapChain::resize(FrameCommand *command, const int width,
 
   m_swapChainDepth = createDepthTexture(resources->device, "depthBuffer", width,
                                         height, D3D12_RESOURCE_STATE_COMMON);
-  createDSV(resources->device,resources->dsvHeap, m_swapChainDepth, m_swapChainDepthDescriptors,
-            DXGI_FORMAT_D32_FLOAT_S8X24_UINT);
+  createDSV(resources->device, resources->dsvHeap, m_swapChainDepth,
+            m_swapChainDepthDescriptors, DXGI_FORMAT_D32_FLOAT_S8X24_UINT);
 
   D3D12_RESOURCE_BARRIER barrier[1];
 

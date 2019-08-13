@@ -1,17 +1,15 @@
 #pragma once
 //#include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
 //#include "platform/windows/graphics/dx12/TextureManagerDx12.h"
+#include "tempDefinition.h"
 #include <cstdint>
 #include <d3d12.h>
 #include <dxgi1_4.h>
-#include "tempDefinition.h"
-
 
 namespace cp::graphics {
 namespace dx12 {
 struct FrameCommand;
 class Dx12RenderingContext;
-
 
 class SwapChain final {
 public:
@@ -24,13 +22,13 @@ public:
   bool initialize(Dx12RenderingContext *context);
   inline IDXGISwapChain *getSwapChain() const { return m_swapChain; }
 
-  // inline D3D12_CPU_DESCRIPTOR_HANDLE currentBackBufferView() const {
-  //  return m_swapChainBuffersDescriptors[m_currentBackBuffer].cpuHandle;
-  //}
+  inline D3D12_CPU_DESCRIPTOR_HANDLE currentBackBufferView() const {
+    return m_swapChainBuffersDescriptors[m_currentBackBuffer].cpuHandle;
+  }
 
-  // inline TextureHandle currentBackBufferTexture() const {
-  //  return m_swapChainBuffersHandles[m_currentBackBuffer];
-  //}
+  inline ID3D12Resource *currentBackBufferTexture() const {
+    return m_swapChainBuffersHandles[m_currentBackBuffer];
+  }
 
   inline D3D12_VIEWPORT *getViewport() { return &m_screenViewport; }
   inline D3D12_RECT *getScissorRect() { return &m_scissorRect; }
@@ -44,9 +42,10 @@ public:
   //      D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0,
   //      nullptr);
   //}
-  // inline D3D12_CPU_DESCRIPTOR_HANDLE getDepthCPUDescriptor() {
-  //  return m_swapChainDepthDescriptors.cpuHandle;
-  //}
+
+  inline D3D12_CPU_DESCRIPTOR_HANDLE getDepthCPUDescriptor() {
+    return m_swapChainDepthDescriptors.cpuHandle;
+  }
 
 private:
   // frame-buffer configuration, hard-coded for the time being
@@ -62,13 +61,13 @@ private:
   // TextureHandle m_swapChainBuffersHandles[FRAME_BUFFERS_COUNT];
   // DescriptorPair m_swapChainBuffersDescriptors[FRAME_BUFFERS_COUNT];
 
-  ID3D12Resource* m_swapChainBuffersHandles[2];
+  ID3D12Resource *m_swapChainBuffersHandles[2];
   DescriptorPair m_swapChainBuffersDescriptors[2];
 
   // TextureHandle m_swapChainDepth;
   // DescriptorPair m_swapChainDepthDescriptors;
 
-  ID3D12Resource* m_swapChainDepth;
+  ID3D12Resource *m_swapChainDepth;
   DescriptorPair m_swapChainDepthDescriptors;
 
   D3D12_VIEWPORT m_screenViewport;

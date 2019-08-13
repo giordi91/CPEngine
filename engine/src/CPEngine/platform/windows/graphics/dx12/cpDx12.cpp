@@ -1,19 +1,19 @@
 
+#include "d3dx12.h"
 #if CP_WINDOWS_PLATFORM
 
-#include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
 #include "CPEngine/application.h"
 #include "CPEngine/core/logging.h"
 #include "CPEngine/graphics/renderingContext.h"
+#include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
+#include "descriptorHeap.h"
+#include "tempDefinition.h"
 #include <CPEngine/globals.h>
 #include <cassert>
 #include <d3d12.h>
 #include <minwindef.h>
-#include "tempDefinition.h"
-#include "descriptorHeap.h"
 
 namespace cp::graphics::dx12 {
-
 
 void createFrameCommand(D3D12DeviceType *device, FrameCommand *fc) {
   auto result = device->CreateCommandAllocator(
@@ -35,13 +35,13 @@ inline HRESULT resetAllocatorAndList(FrameCommand *command) {
   // Reuse the memory associated with command recording.
   // We can only reset when the associated command lists have finished
   // execution on the GPU.
-  HRESULT result = command->commandAllocator->Reset();
+  const HRESULT result = command->commandAllocator->Reset();
   assert(SUCCEEDED(result) && "failed resetting allocator");
 
   // A command list can be reset after it has been added to the command queue
   // via ExecuteCommandList.
   // Reusing the command list reuses memory.
-  HRESULT result2 =
+  const HRESULT result2 =
       command->commandList->Reset(command->commandAllocator, nullptr);
   assert(SUCCEEDED(result) && "failed resetting allocator");
   command->isListOpen = SUCCEEDED(result) & SUCCEEDED(result2);
@@ -49,7 +49,7 @@ inline HRESULT resetAllocatorAndList(FrameCommand *command) {
 }
 
 void Dx12RenderingContext::flushGlobalCommandQueue() {
-    flushCommandQueue(m_resources.globalCommandQueue);
+  flushCommandQueue(m_resources.globalCommandQueue);
 }
 
 void Dx12RenderingContext::flushCommandQueue(ID3D12CommandQueue *queue) {
@@ -83,7 +83,6 @@ createDx12RenderingContext(const RenderingContextCreationSettings &settings) {
   return new Dx12RenderingContext(settings);
 }
 
-
 Dx12RenderingContext::Dx12RenderingContext(
     const RenderingContextCreationSettings &settings)
     : RenderingContext(settings) {
@@ -95,36 +94,36 @@ bool Dx12RenderingContext::initializeGraphics() {
 #if defined(DEBUG) || defined(_DEBUG)
   {
     const HRESULT result =
-        D3D12GetDebugInterface(IID_PPV_ARGS(&m_resources.debugController));
+        D3D12GetDebugInterface(IID_PPV_ARGS(&m_debugController));
     if (FAILED(result)) {
       return false;
     }
-    m_resources.debugController->EnableDebugLayer();
+    m_debugController->EnableDebugLayer();
     // ID3D12Debug1 *debug1;
     // DEBUG_CONTROLLER->QueryInterface(IID_PPV_ARGS(&debug1));
     // debug1->SetEnableGPUBasedValidation(true);
   }
 #endif
 
-  HRESULT result = CreateDXGIFactory1(IID_PPV_ARGS(&m_resources.dxgiFacotry));
+  HRESULT result = CreateDXGIFactory1(IID_PPV_ARGS(&m_dxgiFactory));
   if (FAILED(result)) {
     return false;
   }
 
-  m_resources.adapter = new Dx12Adapter();
+  m_adapter = new Dx12Adapter();
 #if DXR_ENABLED
   m_adapter->setFeture(AdapterFeature::DXR);
   m_adapter->setVendor(AdapterVendor::NVIDIA);
 #else
-  m_resources.adapter->setFeature(ADAPTER_FEATURE::ANY);
-  m_resources.adapter->setVendor(ADAPTER_VENDOR::ANY);
+  m_adapter->setFeature(ADAPTER_FEATURE::ANY);
+  m_adapter->setVendor(ADAPTER_VENDOR::ANY);
 #endif
   const bool found =
-      m_resources.adapter->findBestDx12Adapter(m_resources.dxgiFacotry);
+      m_adapter->findBestDx12Adapter(m_dxgiFactory);
   assert(found && "could not find adapter matching features");
 
   // log the adapter used
-  auto *adapter = m_resources.adapter->getDx12Adapter();
+  auto *adapter = m_adapter->getDx12Adapter();
   DXGI_ADAPTER_DESC desc;
   const HRESULT adapterDescRes = SUCCEEDED(adapter->GetDesc(&desc));
   assert(SUCCEEDED(adapterDescRes));
@@ -133,7 +132,7 @@ bool Dx12RenderingContext::initializeGraphics() {
       "Initializing graphics with adapter: ", desc.Description, "");
   logCoreInfo(toPrint);
 
-  result = D3D12CreateDevice(m_resources.adapter->getDx12Adapter(),
+  result = D3D12CreateDevice(m_adapter->getDx12Adapter(),
                              D3D_FEATURE_LEVEL_12_1,
                              IID_PPV_ARGS(&m_resources.device));
   if (FAILED(result)) {
@@ -141,7 +140,7 @@ bool Dx12RenderingContext::initializeGraphics() {
     // falling back to WARP device
     IDXGIAdapter *warpAdapter;
     result =
-        m_resources.dxgiFacotry->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter));
+        m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter));
     if (FAILED(result)) {
       return false;
     }
@@ -201,14 +200,14 @@ bool Dx12RenderingContext::initializeGraphics() {
   }
   m_resources.currentFrameResource = &m_resources.frameResources[0];
   // creating global heaps
-  m_resources.cbvSrvUavHeap= new DescriptorHeap();
-  m_resources.cbvSrvUavHeap->initializeAsCBVSRVUAV(m_resources.device,1000);
+  m_resources.cbvSrvUavHeap = new DescriptorHeap();
+  m_resources.cbvSrvUavHeap->initializeAsCBVSRVUAV(m_resources.device, 1000);
 
-  m_resources.rtvHeap= new DescriptorHeap();
-  m_resources.rtvHeap->initializeAsRTV(m_resources.device,20);
+  m_resources.rtvHeap = new DescriptorHeap();
+  m_resources.rtvHeap->initializeAsRTV(m_resources.device, 20);
 
-  m_resources.dsvHeap= new DescriptorHeap();
-  m_resources.dsvHeap->initializeAsDSV(m_resources.device,20);
+  m_resources.dsvHeap = new DescriptorHeap();
+  m_resources.dsvHeap->initializeAsDSV(m_resources.device, 20);
 
   /*
 
@@ -272,7 +271,8 @@ bool Dx12RenderingContext::initializeGraphics() {
   m_resources.swapChain = new dx12::SwapChain();
   m_resources.swapChain->initialize(this);
   flushCommandQueue(m_resources.globalCommandQueue);
-   m_resources.swapChain->resize(&m_resources.currentFrameResource->fc, m_settings.width, m_settings.height);
+  m_resources.swapChain->resize(&m_resources.currentFrameResource->fc,
+                                m_settings.width, m_settings.height);
   //}
   // else {
   //  SE_CORE_INFO("Requested HEADLESS client, no swapchain is initialized");
@@ -299,38 +299,36 @@ bool Dx12RenderingContext::newFrame() {
     CloseHandle(eventHandle);
   }
 
+  //resetting the command list and the allocator so is 
+  //ready to be filled up again
   resetAllocatorAndList(&m_resources.currentFrameResource->fc);
 
-  // at this point we know we are ready to go
-
   auto *commandList = m_resources.currentFrameResource->fc.commandList;
-  //commandList->ClearRenderTargetView()
-  /*
-  // Clear the back buffer and depth buffer.
-  float gray[4] = {0.5f, 0.9f, 0.5f, 1.0f};
   // Reuse the memory associated with command recording.
   // We can only reset when the associated command lists have finished
   // execution on the GPU.
   // Indicate a state transition on the resource usage.
-  auto *commandList = dx12::CURRENT_FRAME_RESOURCE->fc.commandList;
   D3D12_RESOURCE_BARRIER rtbarrier[1];
+  ID3D12Resource *backBuffer =
+      m_resources.swapChain->currentBackBufferTexture();
+  rtbarrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(
+      backBuffer, D3D12_RESOURCE_STATE_PRESENT,
+      D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-  const TextureHandle backBufferH =
-      dx12::SWAP_CHAIN->currentBackBufferTexture();
-  int rtcounter = dx12::TEXTURE_MANAGER->transitionTexture2DifNeeded(
-      backBufferH, D3D12_RESOURCE_STATE_RENDER_TARGET, rtbarrier, 0);
-  if (rtcounter != 0) {
-    commandList->ResourceBarrier(rtcounter, rtbarrier);
-  }
+    commandList->ResourceBarrier(1, rtbarrier);
 
   // Set the viewport and scissor rect.  This needs to be reset whenever the
   // command list is reset.
-  commandList->RSSetViewports(1, dx12::SWAP_CHAIN->getViewport());
-  commandList->RSSetScissorRects(1, dx12::SWAP_CHAIN->getScissorRect());
+  commandList->RSSetViewports(1, m_resources.swapChain->getViewport());
+  commandList->RSSetScissorRects(1, m_resources.swapChain->getScissorRect());
 
-  auto *heap = dx12::GLOBAL_CBV_SRV_UAV_HEAP->getResource();
+  //temporary color clear
+  float gray[4] = {0.5f, 0.9f, 0.5f, 1.0f};
+  auto backBufferDescriptor =m_resources.swapChain->currentBackBufferView();
+  commandList->ClearRenderTargetView(backBufferDescriptor,gray,0,nullptr);
+
+  auto *heap = m_resources.cbvSrvUavHeap->getResource();
   commandList->SetDescriptorHeaps(1, &heap);
-  */
 
   return true;
 }
@@ -340,6 +338,11 @@ bool Dx12RenderingContext::dispatchFrame() {
   // finally transition the resource to be present
   auto *commandList = m_resources.currentFrameResource->fc.commandList;
 
+  ID3D12Resource* backBuffer = m_resources.swapChain->currentBackBufferTexture();
+  rtbarrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(
+      backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET,
+      D3D12_RESOURCE_STATE_PRESENT);
+  commandList->ResourceBarrier(1, rtbarrier);
   // TextureHandle backBufferH = dx12::SWAP_CHAIN->currentBackBufferTexture();
   // int rtcounter = dx12::TEXTURE_MANAGER->transitionTexture2DifNeeded(
   //    backBufferH, D3D12_RESOURCE_STATE_PRESENT, rtbarrier, 0);

@@ -2,13 +2,12 @@
 #include "CPEngine/graphics/renderingContext.h"
 #include "CPEngine/platform/windows/graphics/dx12/Dx12Adapter.h"
 #include "CPEngine/platform/windows/graphics/dx12/swapChain.h"
+#include "tempDefinition.h"
+#include <cassert>
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <cassert>
-#include "tempDefinition.h"
 
-namespace cp::graphics {
-namespace dx12 {
+namespace cp::graphics::dx12 {
 class DescriptorHeap;
 
 struct FrameCommand final {
@@ -26,20 +25,16 @@ struct FrameResource final {
   UINT64 fence = 0;
 };
 
-
 struct Dx12Resources {
   D3D12DeviceType *device = nullptr;
-  ID3D12Debug *debugController = nullptr;
-  IDXGIFactory6 *dxgiFacotry = nullptr;
-  Dx12Adapter *adapter = nullptr;
   ID3D12CommandQueue *globalCommandQueue = nullptr;
   ID3D12Fence *globalFence = nullptr;
   SwapChain *swapChain = nullptr;
   FrameResource *frameResources = nullptr;
   FrameResource *currentFrameResource = nullptr;
-  DescriptorHeap* cbvSrvUavHeap = nullptr; 
-  DescriptorHeap* rtvHeap= nullptr; 
-  DescriptorHeap* dsvHeap= nullptr; 
+  DescriptorHeap *cbvSrvUavHeap = nullptr;
+  DescriptorHeap *rtvHeap = nullptr;
+  DescriptorHeap *dsvHeap = nullptr;
 };
 
 graphics::RenderingContext *
@@ -61,7 +56,8 @@ inline bool executeCommandList(ID3D12CommandQueue *queue,
 inline HRESULT resetCommandList(FrameCommand *command) {
 
   assert(!command->isListOpen);
-  const HRESULT res = command->commandList->Reset(command->commandAllocator, nullptr);
+  const HRESULT res =
+      command->commandList->Reset(command->commandAllocator, nullptr);
   assert(SUCCEEDED(res));
   command->isListOpen = true;
   return res;
@@ -80,13 +76,19 @@ public:
   bool newFrame() override;
   bool dispatchFrame() override;
   inline Dx12Resources *getResources() { return &m_resources; }
+  inline IDXGIFactory6 *getFactory() const { return m_dxgiFactory; }
 
   void flushGlobalCommandQueue();
+
 private:
   void flushCommandQueue(ID3D12CommandQueue *queue);
 
 private:
   Dx12Resources m_resources{};
+  ID3D12Debug *m_debugController = nullptr;
+  IDXGIFactory6 *m_dxgiFactory = nullptr;
+  Dx12Adapter *m_adapter = nullptr;
+
   uint32_t m_internalResourceIndex = 0;
   uint32_t m_internalCurrentFence = 0;
   /*
@@ -104,5 +106,4 @@ private:
   */
 };
 
-} // namespace dx12
-} // namespace cp::graphics
+} // namespace cp::graphics::x12
