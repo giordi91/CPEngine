@@ -1,11 +1,11 @@
 #if CP_WINDOWS_PLATFORM
 
-#include "CPEngine/platform/windows/graphics/dx12/swapChain.h"
 #include "CPEngine/platform/windows/core/windowsWindow.h"
-#include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
-#include "CPEngine/platform/windows/graphics/dx12/d3dx12.h"
-#include "descriptorHeap.h"
-#include "tempDefinition.h"
+#include "CPEngine/platform/graphics/dx12/dx12SwapChain.h"
+#include "CPEngine/platform/graphics/dx12/cpDx12.h"
+#include "CPEngine/platform/graphics/dx12/d3dx12.h"
+#include "CPEngine/platform/graphics/dx12/descriptorHeap.h"
+#include "CPEngine/platform/graphics/dx12/dx12RenderingContext.h"
 #include <cassert>
 
 //#include "platform/windows/graphics/dx12/DX12.h"
@@ -22,6 +22,7 @@ const char *BACK_BUFFER_NAMES[3]{"backBuffer1", "backBuffer2", "backBuffer3"};
 
 }
 
+//TODO temporary until we have a texture manager back in the business
 DescriptorPair initializeFromResourceDx12(D3D12DeviceType *device,
                                           ID3D12Resource *resource,
                                           const char *name,
@@ -29,8 +30,6 @@ DescriptorPair initializeFromResourceDx12(D3D12DeviceType *device,
                                           DescriptorHeap *heap) {
   // since we are passing one resource, by definition the resource is static
   // data is now loaded need to create handle etc
-  uint32_t index;
-
   DescriptorPair pair;
   createRTVSRV(device, heap, resource, pair);
 
@@ -39,6 +38,7 @@ DescriptorPair initializeFromResourceDx12(D3D12DeviceType *device,
   return pair;
 }
 
+//TODO temporary until we have a texture manager back in the business
 ID3D12Resource *createDepthTexture(D3D12DeviceType *device, const char *name,
                                    const uint32_t width, const uint32_t height,
                                    const D3D12_RESOURCE_STATES state) {
@@ -110,7 +110,7 @@ bool SwapChain::initialize(Dx12RenderingContext *context) {
   const auto &settings = context->getContextSettings();
   m_inFlightFrames = settings.inFlightFrames;
 
-  const cp::core::NativeWindow *windowData = settings.window->getNativeWindow();
+  const core::NativeWindow *windowData = settings.window->getNativeWindow();
   HWND window;
   memcpy(&window, &windowData->data2, sizeof(HWND));
 
@@ -170,7 +170,7 @@ bool SwapChain::resize(FrameCommand *command, const int width,
   const RenderingContextCreationSettings &settings =
       m_renderingContext->getContextSettings();
   if (m_isInit) {
-    for (int i = 0; i < settings.inFlightFrames; ++i) {
+    for (uint32_t i = 0; i < settings.inFlightFrames; ++i) {
       // dx12::TEXTURE_MANAGER->free(m_swapChainBuffersHandles[i]);
       m_swapChainBuffersHandles[i]->Release();
     }

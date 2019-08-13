@@ -1,5 +1,5 @@
 #pragma once
-#include "CPEngine/platform/windows/graphics/dx12/tempDefinition.h"
+#include "CPEngine/platform/graphics/dx12/cpDX12.h"
 #include <cassert>
 #include <d3d12.h>
 #include <vector>

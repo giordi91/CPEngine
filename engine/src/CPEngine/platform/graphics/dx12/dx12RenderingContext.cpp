@@ -5,9 +5,9 @@
 #include "CPEngine/application.h"
 #include "CPEngine/core/logging.h"
 #include "CPEngine/graphics/renderingContext.h"
-#include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
+#include "CPEngine/platform/graphics/dx12/cpDX12.h"
 #include "descriptorHeap.h"
-#include "tempDefinition.h"
+#include "CPEngine/platform/graphics/dx12/dx12RenderingContext.h"
 #include <CPEngine/globals.h>
 #include <cassert>
 #include <d3d12.h>

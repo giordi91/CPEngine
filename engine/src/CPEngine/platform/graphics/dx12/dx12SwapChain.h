@@ -1,7 +1,7 @@
 #pragma once
 //#include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
 //#include "platform/windows/graphics/dx12/TextureManagerDx12.h"
-#include "tempDefinition.h"
+#include "CPEngine/platform/graphics/dx12/cpDX12.h"
 #include <cstdint>
 #include <d3d12.h>
 #include <dxgi1_4.h>

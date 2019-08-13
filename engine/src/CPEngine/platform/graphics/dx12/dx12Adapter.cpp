@@ -1,9 +1,8 @@
 
 #if CP_WINDOWS_PLATFORM
 
-#include "CPEngine/platform/windows/graphics/dx12/Dx12Adapter.h"
+#include "CPEngine/platform/graphics/dx12/dx12Adapter.h"
 #include "CPEngine/core/core.h"
-#include "CPEngine/core/logging.h"
 #include <d3d12.h>
 
 namespace cp::graphics::dx12 {
@@ -13,8 +12,8 @@ Dx12Adapter::~Dx12Adapter() {
     m_adapter->Release();
   }
 }
-bool Dx12Adapter::findBestDx12Adapter(IDXGIFactory4 *dxgiFactory,
-                                      bool verbose) {
+bool Dx12Adapter::findBestDx12Adapter(IDXGIFactory4 *dxgiFactory
+                                      ) {
 
   IDXGIAdapter1 *curDx12Adapter;
   size_t adapterMemory = 0;

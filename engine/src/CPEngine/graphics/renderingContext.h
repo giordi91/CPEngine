@@ -53,8 +53,10 @@ public:
   }
 
 protected:
+  //Anonymous parameters are width and height, removed the name to mute the 
+  //visual studio warning
   explicit RenderingContext(const RenderingContextCreationSettings &settings,
-                            uint32_t width, uint32_t height)
+                            uint32_t , uint32_t )
       : m_settings(settings){};
   RenderingContextCreationSettings m_settings;
 };

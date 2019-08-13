@@ -100,7 +100,7 @@ bool Graphics3DLayer::onMouseMoveEvent(core::MouseMoveEvent &e) {
 }
 
 
-bool Graphics3DLayer::onResizeEvent(core::WindowResizeEvent &e) {
+bool Graphics3DLayer::onResizeEvent(core::WindowResizeEvent &) {
   // propagate the resize to every node of the graph
   //dx12::RENDERING_GRAPH->onResizeEvent(e.getWidth(), e.getHeight());
   return true;

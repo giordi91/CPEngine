@@ -17,7 +17,7 @@ public:
   inline ADAPTER_VENDOR getVendor() const { return m_vendor; }
   inline ADAPTER_FEATURE getFeature() const { return m_feature; }
 
-  bool findBestDx12Adapter(IDXGIFactory4 *dxgiFactory, bool verbose = false);
+  bool findBestDx12Adapter(IDXGIFactory4 *dxgiFactory);
   inline IDXGIAdapter3 *getDx12Adapter() const { return m_adapter; }
 
 private:

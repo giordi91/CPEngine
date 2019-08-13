@@ -1,8 +1,8 @@
 #pragma once
 #include "CPEngine/graphics/renderingContext.h"
-#include "CPEngine/platform/windows/graphics/dx12/Dx12Adapter.h"
-#include "CPEngine/platform/windows/graphics/dx12/swapChain.h"
-#include "tempDefinition.h"
+#include "CPEngine/platform/graphics/dx12/Dx12Adapter.h"
+#include "CPEngine/platform/graphics/dx12/dx12SwapChain.h"
+#include "CPEngine/platform/graphics/dx12/cpDX12.h"
 #include <cassert>
 #include <d3d12.h>
 #include <dxgi1_6.h>

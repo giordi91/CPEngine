@@ -2,7 +2,7 @@
 #include "CPEngine/core/logging.h"
 #include <cassert>
 #if CP_WINDOWS_PLATFORM
-#include "CPEngine/platform/windows/graphics/dx12/cpDx12.h"
+#include "CPEngine/platform/graphics/dx12/dx12RenderingContext.h"
 #endif
 
 static const char *GRAPHICS_API_TO_NAME[] = {"Vulkan", "DirectX 12"};
@@ -47,6 +47,5 @@ bool RenderingContext::isAPISupported(const GRAPHICS_API graphicsAPI) {
 #if CP_WINDOWS_PLATFORM
   return graphicsAPI == GRAPHICS_API::DX12;
 #endif
-  return nullptr;
 }
 } // namespace cp::graphics

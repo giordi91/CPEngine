@@ -1,8 +1,8 @@
 #if CP_WINDOWS_PLATFORM
 
 
-#include "CPEngine/platform/windows/graphics/dx12/descriptorHeap.h"
-#include "CPEngine/platform/windows/graphics/dx12/d3dx12.h"
+#include "CPEngine/platform/graphics/dx12/descriptorHeap.h"
+#include "CPEngine/platform/graphics/dx12/d3dx12.h"
 
 namespace cp::graphics::dx12{
 bool DescriptorHeap::initialize(D3D12DeviceType* device,int size, D3D12_DESCRIPTOR_HEAP_TYPE type) {
