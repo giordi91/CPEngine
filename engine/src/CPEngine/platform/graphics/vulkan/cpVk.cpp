@@ -191,7 +191,7 @@ bool registerDebugCallback(VkInstance instance) {
   debug_utils_messenger_create_info.messageSeverity =
       VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
       VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-      VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+      // VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
       VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
   debug_utils_messenger_create_info.messageType =
       VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
@@ -457,7 +457,8 @@ bool createLogicalDevice(const VkPhysicalDevice physicalDevice,
 
   logCoreInfo("VRAM: ");
   for (unsigned int i = 0; i < memoryProperties.memoryHeapCount; ++i) {
-    sprintf(x, "%f", static_cast<float>(memoryProperties.memoryHeaps[i].size * 1.0e-9));
+    sprintf(x, "%f",
+            static_cast<float>(memoryProperties.memoryHeaps[i].size * 1.0e-9));
     logCoreInfo(
         core::STRING_POOL->concatenateFrame("    Heap size:", " GB", x));
     logCoreInfo("    Heap type:");
@@ -491,6 +492,181 @@ bool createLogicalDevice(const VkPhysicalDevice physicalDevice,
     }
   }
 
+  return true;
+}
+
+bool createLogicalDeviceWithWsiExtensionsEnabled(
+    const VkPhysicalDevice physicalDevice,
+    const std::vector<QueueInfo> queueInfos,
+    std::vector<char const *> &desiredExtensions,
+    VkPhysicalDeviceFeatures2 *desiredFeatures, VkDevice &logicalDevice) {
+  desiredExtensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+  desiredExtensions.emplace_back(VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME);
+  desiredExtensions.emplace_back(VK_KHR_16BIT_STORAGE_EXTENSION_NAME);
+  desiredExtensions.emplace_back(VK_KHR_8BIT_STORAGE_EXTENSION_NAME);
+
+  return createLogicalDevice(physicalDevice, queueInfos, desiredExtensions,
+                             desiredFeatures, logicalDevice);
+}
+bool selectQueueFamilyThatSupportsPresentationToGivenSurface(
+    VkPhysicalDevice physicalDevice, VkSurfaceKHR presentationSurface,
+    uint32_t &queueFamilyIndex) {
+  std::vector<VkQueueFamilyProperties> queue_families;
+  if (!checkAvailableQueueFamiliesAndTheirProperties(physicalDevice,
+                                                     queue_families)) {
+    return false;
+  }
+
+  for (uint32_t index = 0; index < static_cast<uint32_t>(queue_families.size());
+       ++index) {
+    VkBool32 presentation_supported = VK_FALSE;
+    VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(
+        physicalDevice, index, presentationSurface, &presentation_supported);
+    if ((VK_SUCCESS == result) && (VK_TRUE == presentation_supported)) {
+      queueFamilyIndex = index;
+      return true;
+    }
+  }
+  return false;
+}
+
+void getDeviceQueue(const VkDevice logicalDevice,
+                    const uint32_t queueFamilyIndex, const uint32_t queueIndex,
+                    VkQueue &queue) {
+  vkGetDeviceQueue(logicalDevice, queueFamilyIndex, queueIndex, &queue);
+}
+
+bool waitForAllSubmittedCommandsToBeFinished(const VkDevice logicalDevice) {
+  const VkResult result = vkDeviceWaitIdle(logicalDevice);
+  if (VK_SUCCESS != result) {
+    std::cout << "Waiting on a device failed." << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool newSemaphore(const VkDevice logicalDevice, VkSemaphore &semaphore) {
+  VkSemaphoreCreateInfo semaphoreCreateInfo = {
+      VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO, nullptr, 0};
+
+  const VkResult result = vkCreateSemaphore(logicalDevice, &semaphoreCreateInfo,
+                                            nullptr, &semaphore);
+  if (VK_SUCCESS != result) {
+    std::cout << "Could not create a semaphore." << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool presentImage(VkQueue queue, std::vector<VkSemaphore> renderingSemaphores,
+                  std::vector<PresentInfo> imagesToPresent) {
+  std::vector<VkSwapchainKHR> swapchains;
+  std::vector<uint32_t> imageIndices;
+
+  for (auto &imageToPresent : imagesToPresent) {
+    swapchains.emplace_back(imageToPresent.swapchain);
+    imageIndices.emplace_back(imageToPresent.imageIndex);
+  }
+
+  VkPresentInfoKHR presentInfo = {
+      VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+      nullptr,
+      static_cast<uint32_t>(renderingSemaphores.size()),
+      renderingSemaphores.data(),
+      static_cast<uint32_t>(swapchains.size()),
+      swapchains.data(),
+      imageIndices.data(),
+      nullptr};
+
+  const VkResult result = vkQueuePresentKHR(queue, &presentInfo);
+  switch (result) {
+  case VK_SUCCESS:
+    return true;
+  default:
+    return false;
+  }
+}
+VkRenderPass createRenderPass(VkDevice logicalDevice, VkFormat format) {
+  VkRenderPass renderPass{};
+
+  VkAttachmentDescription attachments[1] = {};
+  attachments[0].format = format;
+  attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+  attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  attachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  // the index here, 0, refers to the index in the attachment array;
+  VkAttachmentReference attachReference{
+      0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+
+  VkSubpassDescription subPass{};
+  subPass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+  subPass.colorAttachmentCount = 1;
+  subPass.pColorAttachments = &attachReference;
+
+  VkRenderPassCreateInfo createInfo{VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO};
+  createInfo.attachmentCount = 1;
+  createInfo.pAttachments = attachments;
+  createInfo.subpassCount = 1;
+  createInfo.pSubpasses = &subPass;
+
+  vkCreateRenderPass(logicalDevice, &createInfo, nullptr, &renderPass);
+  return renderPass;
+}
+
+VkFramebuffer createFrameBuffer(const VkDevice logicalDevice,
+                                const VkRenderPass renderPass,
+                                VkImageView imageView, const uint32_t width,
+                                const uint32_t height) {
+  VkFramebufferCreateInfo createInfo = {
+      VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO};
+  createInfo.renderPass = renderPass;
+  createInfo.pAttachments = &imageView;
+  createInfo.attachmentCount = 1;
+  createInfo.width = width;
+  createInfo.height = height;
+  createInfo.layers = 1;
+
+  VkFramebuffer frameBuffer = nullptr;
+  vkCreateFramebuffer(logicalDevice, &createInfo, nullptr, &frameBuffer);
+  return frameBuffer;
+}
+  bool createCommandPool(const VkDevice logicalDevice,
+                       const VkCommandPoolCreateFlags parameters,
+                       const uint32_t queueFamily, VkCommandPool &commandPool) {
+  VkCommandPoolCreateInfo commandPoolCreateInfo = {
+      VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO, nullptr, parameters,
+      queueFamily};
+
+  const VkResult result = vkCreateCommandPool(
+      logicalDevice, &commandPoolCreateInfo, nullptr, &commandPool);
+  if (VK_SUCCESS != result) {
+    std::cout << "Could not create command pool." << std::endl;
+    return false;
+  }
+  return true;
+}
+bool allocateCommandBuffers(const VkDevice logicalDevice,
+                            const VkCommandPool commandPool,
+                            const VkCommandBufferLevel level,
+                            const uint32_t count,
+                            std::vector<VkCommandBuffer> &commandBuffers) {
+  VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
+      VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, nullptr, commandPool,
+      level, count};
+
+  commandBuffers.resize(count);
+
+  const VkResult result = vkAllocateCommandBuffers(
+      logicalDevice, &commandBufferAllocateInfo, commandBuffers.data());
+  if (VK_SUCCESS != result) {
+    std::cout << "Could not allocate command buffers." << std::endl;
+    return false;
+  }
   return true;
 }
 

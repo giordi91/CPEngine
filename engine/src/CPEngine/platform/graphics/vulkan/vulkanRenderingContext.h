@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 //TODO: remove vector
 #include <vector>
+#include "CPEngine/platform/graphics/vulkan/vkSwapChain.h"
 
 namespace cp::graphics::vulkan {
 
@@ -14,7 +15,7 @@ struct VulkanResources {
   VkQueue COMPUTE_QUEUE = nullptr;
   VkQueue PRESENTATION_QUEUE = nullptr;
   VkPhysicalDevice PHYSICAL_DEVICE = nullptr;
-  //Swapchain *SWAP_CHAIN = nullptr;
+  VkSwapchain *SWAP_CHAIN = nullptr;
   VkRenderPass RENDER_PASS = nullptr;
   VkSemaphore IMAGE_ACQUIRED_SEMAPHORE = nullptr;
   VkSemaphore READY_TO_PRESENT_SEMAPHORE = nullptr;

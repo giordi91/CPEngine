@@ -1,6 +1,7 @@
 #include "CPEngine/graphics/renderingContext.h"
 #include "CPEngine/core/logging.h"
 #include <cassert>
+#include "CPEngine/platform/graphics/vulkan/vulkanRenderingContext.h"
 #if CP_WINDOWS_PLATFORM
 #include "CPEngine/platform/graphics/dx12/dx12RenderingContext.h"
 #endif
@@ -27,7 +28,7 @@ createWindowsRenderingContext(const RenderingContextCreationSettings &settings,
     return dx12::createDx12RenderingContext(settings,width,height);
   }
   case GRAPHICS_API::VULKAN:;
-    assert(!"Vulkan not yet supported ");
+    return vulkan::createVulkanRenderingContext(settings,width,height);
   default:;
     assert(!"Not supported API requested");
     return nullptr;
@@ -45,7 +46,7 @@ RenderingContext::create(const RenderingContextCreationSettings &settings,
 
 bool RenderingContext::isAPISupported(const GRAPHICS_API graphicsAPI) {
 #if CP_WINDOWS_PLATFORM
-  return graphicsAPI == GRAPHICS_API::DX12;
+  return (graphicsAPI == GRAPHICS_API::DX12)| (graphicsAPI==GRAPHICS_API::VULKAN);
 #endif
 }
 } // namespace cp::graphics

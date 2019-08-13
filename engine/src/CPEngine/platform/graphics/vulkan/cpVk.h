@@ -12,6 +12,23 @@
 #include <vulkan/vulkan.h>
 
 namespace cp::graphics::vulkan {
+
+#define VK_CHECK(call)                                                         \
+  do {                                                                         \
+    VkResult result_ = call;                                                   \
+    assert(result_ == VK_SUCCESS);                                             \
+  } while (0)
+
+#define SET_DEBUG_NAME(resource, type, name)                                   \
+  {                                                                            \
+    VkDebugUtilsObjectNameInfoEXT debugInfo_{};                                \
+    debugInfo_.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;     \
+    debugInfo_.objectHandle = (uint64_t)resource;                              \
+    debugInfo_.objectType = type;                                              \
+    debugInfo_.pObjectName = name;                                             \
+    vkSetDebugUtilsObjectNameEXT(LOGICAL_DEVICE, &debugInfo_);                 \
+  }
+
 struct QueueInfo {
   uint32_t familyIndex;
   std::vector<float> priorities;
@@ -77,5 +94,26 @@ bool createLogicalDeviceWithWsiExtensionsEnabled(
 
 bool loadDeviceLevelFunctions(
     VkDevice logicalDevice, std::vector<char const *> const &enabledExtensions);
+
+void getDeviceQueue(const VkDevice logicalDevice,
+                    const uint32_t queueFamilyIndex, const uint32_t queueIndex,
+                    VkQueue &queue);
+
+bool newSemaphore(const VkDevice logicalDevice, VkSemaphore &semaphore);
+bool waitForAllSubmittedCommandsToBeFinished(const VkDevice logicalDevice);
+
+VkRenderPass createRenderPass(VkDevice logicalDevice,VkFormat format);
+VkFramebuffer createFrameBuffer(VkDevice logicalDevice, VkRenderPass renderPass,
+                                VkImageView imageView, uint32_t width,
+                                uint32_t height);
+bool createCommandPool(const VkDevice logicalDevice,
+                       const VkCommandPoolCreateFlags parameters,
+                       const uint32_t queueFamily, VkCommandPool& commandPool);
+
+bool allocateCommandBuffers(const VkDevice logicalDevice,
+                            const VkCommandPool commandPool,
+                            const VkCommandBufferLevel level,
+                            const uint32_t count,
+                            std::vector<VkCommandBuffer>& commandBuffers);
 
 } // namespace cp::graphics::vulkan

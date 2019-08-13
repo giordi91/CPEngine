@@ -3,9 +3,8 @@
 #include "CPEngine/application.h"
 #include "CPEngine/core/logging.h"
 #include "CPEngine/graphics/renderingContext.h"
-#include "VulkanFunctions.h"
+#include "CPEngine/platform/graphics/vulkan/vulkanFunctions.h"
 #include "cpVk.h"
-#include <CPEngine/globals.h>
 #include <cassert>
 
 namespace cp::graphics::vulkan {
@@ -20,7 +19,7 @@ VulkanRenderingContext::VulkanRenderingContext(
     const RenderingContextCreationSettings &settings, const uint32_t width,
     const uint32_t height)
     : RenderingContext(settings, width, height) {
-  logCoreInfo("Initializing a DirectX 12 context");
+  logCoreInfo("Initializing a Vulkan context");
 }
 
 bool VulkanRenderingContext::initializeGraphics() {
@@ -120,49 +119,46 @@ bool VulkanRenderingContext::initializeGraphics() {
       }
       m_resources.PHYSICAL_DEVICE = physicalDevice;
 
-      /*
       getDeviceQueue(m_resources.LOGICAL_DEVICE, graphicsQueueFamilyIndex, 0,
                      m_resources.GRAPHICS_QUEUE);
       getDeviceQueue(m_resources.LOGICAL_DEVICE, presentQueueFamilyIndex, 0,
                      m_resources.PRESENTATION_QUEUE);
-                     */
       break;
     }
   }
 
-  /*
-  assert(LOGICAL_DEVICE != nullptr);
+  assert(m_resources.LOGICAL_DEVICE != nullptr);
   // create swap
-  const auto swapchain = new Swapchain();
-  createSwapchain(LOGICAL_DEVICE, PHYSICAL_DEVICE, SURFACE,
-                  globals::SCREEN_WIDTH, globals::SCREEN_HEIGHT, SWAP_CHAIN,
-                  *swapchain, RENDER_PASS);
-  SWAP_CHAIN = swapchain;
+  //this is the swap chain to be filled, then the old one is null SWAP_CHAIN
+  const auto swapchain = new VkSwapchain();
+  createSwapchain(m_resources.LOGICAL_DEVICE, m_resources.PHYSICAL_DEVICE, m_resources.SURFACE,
+                  m_settings.width, m_settings.height, m_resources.SWAP_CHAIN,
+                  *swapchain, m_resources.RENDER_PASS, m_resources.IMAGE_FORMAT);
+  m_resources.SWAP_CHAIN = swapchain;
 
-  if (!newSemaphore(LOGICAL_DEVICE, IMAGE_ACQUIRED_SEMAPHORE)) {
+  if (!newSemaphore(m_resources.LOGICAL_DEVICE, m_resources.IMAGE_ACQUIRED_SEMAPHORE)) {
     assert(0);
   }
 
-  if (!newSemaphore(LOGICAL_DEVICE, READY_TO_PRESENT_SEMAPHORE)) {
+  if (!newSemaphore(m_resources.LOGICAL_DEVICE, m_resources.READY_TO_PRESENT_SEMAPHORE)) {
     assert(0);
   }
 
   // Command buffers creation
-  if (!createCommandPool(LOGICAL_DEVICE,
+  if (!createCommandPool(m_resources.LOGICAL_DEVICE,
                          VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-                         graphicsQueueFamilyIndex, COMMAND_POOL)) {
+                         graphicsQueueFamilyIndex, m_resources.COMMAND_POOL)) {
     assert(0);
   }
 
   std::vector<VkCommandBuffer> commandBuffers;
-  if (!allocateCommandBuffers(LOGICAL_DEVICE, COMMAND_POOL,
+  if (!allocateCommandBuffers(m_resources.LOGICAL_DEVICE, m_resources.COMMAND_POOL,
                               VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1,
                               commandBuffers)) {
     assert(0);
   }
-  COMMAND_BUFFER = commandBuffers[0];
+  m_resources.COMMAND_BUFFER = commandBuffers[0];
 
-  */
   return true;
 } // namespace cp::graphics::dx12
 bool VulkanRenderingContext::newFrame() { return true; }
