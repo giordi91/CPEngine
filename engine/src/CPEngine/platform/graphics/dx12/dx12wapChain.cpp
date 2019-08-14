@@ -6,7 +6,6 @@
 #include "CPEngine/platform/graphics/dx12/d3dx12.h"
 #include "CPEngine/platform/graphics/dx12/descriptorHeap.h"
 #include "CPEngine/platform/graphics/dx12/dx12RenderingContext.h"
-#include <cassert>
 
 //#include "platform/windows/graphics/dx12/DX12.h"
 /*

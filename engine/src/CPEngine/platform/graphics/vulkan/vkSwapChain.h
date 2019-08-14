@@ -23,5 +23,6 @@ bool destroySwapchain(const VkDevice logicalDevice, VkSwapchain *swapchain);
 void resizeSwapchain(const VkDevice logicalDevice,
                      const VkPhysicalDevice physicalDevice,
                      VkSurfaceKHR surface, uint32_t width, uint32_t height,
-                     VkSwapchain &outSwapchain, VkRenderPass &renderPass);
+                     VkSwapchain &outSwapchain, VkRenderPass &renderPass,
+                     VkFormat &imageFormat);
 } // namespace cp::graphics::vulkan

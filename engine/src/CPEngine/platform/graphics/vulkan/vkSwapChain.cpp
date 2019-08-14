@@ -1,10 +1,10 @@
 #include "CPEngine/platform/graphics/vulkan/vkSwapChain.h"
-#include "CPEngine/platform/graphics/vulkan/vulkanFunctions.h"
 #include "CPEngine/platform/graphics/vulkan/cpVk.h"
+#include "CPEngine/platform/graphics/vulkan/vulkanFunctions.h"
 #include <cassert>
 #include <iostream>
 
-namespace cp::graphics::vulkan{
+namespace cp::graphics::vulkan {
 
 bool selectDesiredPresentationMode(const VkPhysicalDevice physicalDevice,
                                    const VkSurfaceKHR presentationSurface,
@@ -349,8 +349,8 @@ bool createSwapchainWithR8G8B8A8FormatAndMailboxPresentMode(
   // now that we have the swap chain images we need to create the view to them
   swapchainImageViews.resize(numberOfImages);
   for (uint32_t i = 0; i < numberOfImages; ++i) {
-    swapchainImageViews[i] =
-        createSwapchainImageView(logicalDevice, swapchainImages[i],imageFormat);
+    swapchainImageViews[i] = createSwapchainImageView(
+        logicalDevice, swapchainImages[i], imageFormat);
   }
 
   return true;
@@ -360,7 +360,7 @@ bool createSwapchain(const VkDevice logicalDevice,
                      const VkPhysicalDevice physicalDevice,
                      VkSurfaceKHR surface, uint32_t width, uint32_t height,
                      VkSwapchain *oldSwapchain, VkSwapchain &outSwapchain,
-                     VkRenderPass &renderPass,VkFormat&  format) {
+                     VkRenderPass &renderPass, VkFormat &format) {
 
   waitForAllSubmittedCommandsToBeFinished(logicalDevice);
   VK_CHECK(vkDeviceWaitIdle(logicalDevice));
@@ -372,18 +372,19 @@ bool createSwapchain(const VkDevice logicalDevice,
   VkExtent2D swapchainImageSize;
   if (!createSwapchainWithR8G8B8A8FormatAndMailboxPresentMode(
           physicalDevice, surface, logicalDevice,
-          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|VK_IMAGE_USAGE_TRANSFER_SRC_BIT| VK_IMAGE_USAGE_TRANSFER_DST_BIT, swapchainImageSize,
-          format, old, outSwapchain.swapchain, outSwapchain.images,
-          outSwapchain.imagesView)) {
+          VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+              VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+          swapchainImageSize, format, old, outSwapchain.swapchain,
+          outSwapchain.images, outSwapchain.imagesView)) {
     return false;
   }
   outSwapchain.width = width;
   outSwapchain.height = height;
 
   // create the render pass;
-  //delete old renderPass
-  if(renderPass!= VK_NULL_HANDLE) {
-	  vkDestroyRenderPass(logicalDevice,renderPass,nullptr);
+  // delete old renderPass
+  if (renderPass != VK_NULL_HANDLE) {
+    vkDestroyRenderPass(logicalDevice, renderPass, nullptr);
   }
   renderPass = createRenderPass(logicalDevice, format);
 
@@ -394,7 +395,6 @@ bool createSwapchain(const VkDevice logicalDevice,
     outSwapchain.frameBuffers[i] = createFrameBuffer(
         logicalDevice, renderPass, outSwapchain.imagesView[i], width, height);
   }
-  // createFrameBuffer(LOGICAL_DEVICE, FRAME_BUFFERS);
 
   if (oldSwapchain != nullptr) {
     destroySwapchain(logicalDevice, oldSwapchain);
@@ -416,16 +416,16 @@ bool destroySwapchain(const VkDevice logicalDevice, VkSwapchain *swapchain) {
   }
 
   vkDestroySwapchainKHR(logicalDevice, swapchain->swapchain, nullptr);
-  delete swapchain;
   return true;
 }
 
 void resizeSwapchain(const VkDevice logicalDevice,
                      const VkPhysicalDevice physicalDevice,
                      VkSurfaceKHR surface, uint32_t width, uint32_t height,
-                     VkSwapchain &outSwapchain, VkRenderPass &renderPass, VkFormat& imageFormat) {
+                     VkSwapchain &outSwapchain, VkRenderPass &renderPass,
+                     VkFormat &imageFormat) {
   VkSwapchain old = outSwapchain;
   createSwapchain(logicalDevice, physicalDevice, surface, width, height, &old,
-                  outSwapchain, renderPass,imageFormat);
+                  outSwapchain, renderPass, imageFormat);
 }
-} // namespace vk
+} // namespace cp::graphics::vulkan

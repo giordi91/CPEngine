@@ -2,12 +2,11 @@
 #include "CPEngine/platform/graphics/vulkan/vulkanRenderingContext.h"
 #include "CPEngine/application.h"
 #include "CPEngine/core/logging.h"
+#include "CPEngine/globals.h"
 #include "CPEngine/graphics/renderingContext.h"
 #include "CPEngine/platform/graphics/vulkan/vulkanFunctions.h"
 #include "cpVk.h"
 #include <cassert>
-#include "CPEngine/globals.h"
-#include "CPEngine/application.h"
 
 namespace cp::graphics::vulkan {
 
@@ -308,26 +307,26 @@ bool VulkanRenderingContext::newFrame() {
 
   VkRenderPassBeginInfo beginInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
   beginInfo.renderPass = m_resources.renderPass;
-  beginInfo.framebuffer = m_resources.swapChain->frameBuffers[m_internalResourceIndex];
+  beginInfo.framebuffer =
+      m_resources.swapChain->frameBuffers[m_internalResourceIndex];
 
   // similar to a viewport mostly used on "tiled renderers" to optimize, talking
   // about hardware based tile renderer, aka mobile GPUs.
-  //TODO change this should not live in application possibly
-  const RuntimeApplicationData* data = globals::APPLICATION->getRuntimeDataReadOnly();
-  beginInfo.renderArea.extent.width =
-      static_cast<int32_t>(data->windowWidth);
+  // TODO change this should not live in application possibly
+  beginInfo.renderArea.extent.width = static_cast<int32_t>(m_screenInfo.width);
   beginInfo.renderArea.extent.height =
-      static_cast<int32_t>(data->windowHeight);
+      static_cast<int32_t>(m_screenInfo.height);
   beginInfo.clearValueCount = 1;
   beginInfo.pClearValues = &clear;
 
-  vkCmdBeginRenderPass(m_resources.commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+  vkCmdBeginRenderPass(m_resources.commandBuffer, &beginInfo,
+                       VK_SUBPASS_CONTENTS_INLINE);
 
   return true;
 }
 
 bool VulkanRenderingContext::dispatchFrame() {
-   vkCmdEndRenderPass(m_resources.commandBuffer);
+  vkCmdEndRenderPass(m_resources.commandBuffer);
 
   const ImageTransition imageTransitionBeforePresent = {
       m_resources.swapChain->images[m_internalResourceIndex],
@@ -366,6 +365,10 @@ bool VulkanRenderingContext::dispatchFrame() {
 
 bool VulkanRenderingContext::resize(const uint32_t width,
                                     const uint32_t height) {
+  m_screenInfo = {width, height};
+  resizeSwapchain(m_resources.logicalDevice, m_resources.physicalDevice,
+                  m_resources.surface, width, height, *(m_resources.swapChain),
+                  m_resources.renderPass, m_resources.imageFormat);
   return true;
 }
 
@@ -401,8 +404,8 @@ void VulkanRenderingContext::tempPipeInit() {
   //       m_mesh.indices.size() * sizeof(uint32_t));
 
   // SET_DEBUG_NAME(m_vertexBuffer.buffer, VK_OBJECT_TYPE_BUFFER, "vertex
-  // buffer"); SET_DEBUG_NAME(m_indexBuffer.buffer, VK_OBJECT_TYPE_BUFFER, "index
-  // buffer"); m_resources.pipeline =
+  // buffer"); SET_DEBUG_NAME(m_indexBuffer.buffer, VK_OBJECT_TYPE_BUFFER,
+  // "index buffer"); m_resources.pipeline =
   //    createGraphicsPipeline(m_resources.logicalDevice, nullptr, nullptr,
   //    m_resources.renderPass, nullptr,m_resources.pipelineLayout);
 

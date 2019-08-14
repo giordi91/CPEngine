@@ -49,16 +49,12 @@ Application::Application() {
   m_window->setEventCallback(
       [this](core::Event &e) -> void { this->onEvent(e); });
 
-  // update the runtime data
-  m_runtimeData.windowWidth = windowProperty.width;
-  m_runtimeData.windowHeight = windowProperty.height;
-
   // now that the window is created we can crate a rendering context
   // HARDCODED
   graphics::RenderingContextCreationSettings creationSettings{};
-  creationSettings.width = m_runtimeData.windowWidth;
-  creationSettings.height = m_runtimeData.windowHeight;
-  //creationSettings.graphicsAPI = graphics::GRAPHICS_API::DX12;
+  creationSettings.width = windowProperty.width;
+  creationSettings.height = windowProperty.height;
+  // creationSettings.graphicsAPI = graphics::GRAPHICS_API::DX12;
   creationSettings.graphicsAPI = graphics::GRAPHICS_API::VULKAN;
   creationSettings.window = m_window;
   creationSettings.apiConfig = {};
@@ -159,17 +155,17 @@ bool Application::onResizeWindow(core::WindowResizeEvent &e) {
 
   // TODO: decide how to handle this kind of information like screen size, I was
   // thinking to have render contexts to hanlde this with a camera etc
-  m_runtimeData.windowWidth = e.getWidth();
-  m_runtimeData.windowHeight = e.getHeight();
+  uint32_t width = e.getWidth();
+  uint32_t height = e.getHeight();
 
-  if (!m_window->onResize(m_runtimeData.windowWidth,
-                          m_runtimeData.windowHeight)) {
+  if (!m_window->onResize(width,
+                          height)) {
     logCoreError("Error in resizing the window");
     return false;
   }
 
-  if (!m_renderingContext->resize(m_runtimeData.windowWidth,
-                                  m_runtimeData.windowHeight)) {
+  if (!m_renderingContext->resize(width,
+                                  height)) {
     logCoreError("Error in resizing the contest");
     return false;
   }

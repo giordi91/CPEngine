@@ -10,8 +10,8 @@ namespace cp {
 
 struct RuntimeApplicationData {
   uint32_t currentFrame = 0;
-  uint32_t windowWidth = 0;
-  uint32_t windowHeight = 0;
+  uint32_t timeSinceStart =0;
+  uint32_t lastFrameCPUTime =0;
 };
 
 class Application {

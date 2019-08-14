@@ -13,9 +13,6 @@ extern const char *ENGINE_VERSION;
 void coreStartUp();
 void coreShutDown();
 
-#ifndef ARRAYSIZE
-#define ARRAYSIZE(array) sizeof(array) / sizeof(array[0]);
-#endif
 
 } // namespace core
 } // namespace cp

@@ -134,49 +134,6 @@ bool createVulkanInstance(std::vector<char const *> const &desiredExtensions,
 
   return true;
 }
-VkBool32 debugCallback2(VkDebugReportFlagsEXT flags,
-                        VkDebugReportObjectTypeEXT objectType, uint64_t object,
-                        size_t location, int32_t messageCode,
-                        const char *pLayerPrefix, const char *pMessage,
-                        void *pUserData) {
-
-  const char *type =
-      flags & VK_DEBUG_REPORT_ERROR_BIT_EXT
-          ? "ERROR"
-          : (flags & (VK_DEBUG_REPORT_WARNING_BIT_EXT |
-                      VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT))
-                ? "WARNING"
-                : "INFO";
-
-  char message[4096];
-  snprintf(message, ARRAYSIZE(message), "%s: %s\n", type, pMessage);
-#if _WIN32
-  OutputDebugStringA(message);
-#endif
-
-  printf("%s", message);
-  if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
-    assert(0 && "validation layer assertion");
-  }
-
-  // always need to return false, true is reserved for layer development
-  return VK_FALSE;
-}
-
-bool registerDebugCallback2(VkInstance instance) {
-  VkDebugReportCallbackCreateInfoEXT createInfo{
-      VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT};
-  createInfo.flags = VK_DEBUG_REPORT_WARNING_BIT_EXT |
-                     VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
-                     VK_DEBUG_REPORT_ERROR_BIT_EXT |
-                     VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-  createInfo.pfnCallback = debugCallback2;
-
-  const VkResult callbackResult = vkCreateDebugReportCallbackEXT(
-      instance, &createInfo, nullptr, &DEBUG_CALLBACK2);
-  assert(callbackResult == VK_SUCCESS);
-  return true;
-}
 
 // proper function signature is
 // debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

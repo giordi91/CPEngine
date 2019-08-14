@@ -11,7 +11,6 @@
 #include <CPEngine/globals.h>
 #include <cassert>
 #include <d3d12.h>
-#include <minwindef.h>
 
 namespace cp::graphics::dx12 {
 
@@ -369,6 +368,7 @@ bool Dx12RenderingContext::dispatchFrame() {
 }
 
 bool Dx12RenderingContext::resize(const uint32_t width, const uint32_t height) {
+  m_screenInfo = {width,height};
   return m_resources.swapChain->resize(&m_resources.currentFrameResource->fc,
                                        width, height);
 }
