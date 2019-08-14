@@ -61,7 +61,10 @@ Application::Application() {
 
   m_renderingContext = graphics::RenderingContext::create(
       creationSettings, creationSettings.width, creationSettings.height);
-  m_renderingContext->initializeGraphics();
+  bool result = m_renderingContext->initializeGraphics();
+  if (!result) {
+      exit( EXIT_FAILURE);
+  }
 
   m_queuedEndOfFrameEvents.resize(2);
   m_queuedEndOfFrameEvents[0].reserve(10);
@@ -158,14 +161,12 @@ bool Application::onResizeWindow(core::WindowResizeEvent &e) {
   uint32_t width = e.getWidth();
   uint32_t height = e.getHeight();
 
-  if (!m_window->onResize(width,
-                          height)) {
+  if (!m_window->onResize(width, height)) {
     logCoreError("Error in resizing the window");
     return false;
   }
 
-  if (!m_renderingContext->resize(width,
-                                  height)) {
+  if (!m_renderingContext->resize(width, height)) {
     logCoreError("Error in resizing the contest");
     return false;
   }

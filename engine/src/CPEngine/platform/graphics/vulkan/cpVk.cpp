@@ -129,6 +129,9 @@ bool createVulkanInstance(std::vector<char const *> const &desiredExtensions,
       vkCreateInstance(&instanceCreateInfo, nullptr, &instance);
   if ((result != VK_SUCCESS) || (instance == VK_NULL_HANDLE)) {
     logCoreError("Could not create Vulkan instance.");
+    if(result == VK_ERROR_LAYER_NOT_PRESENT) {
+      logCoreError("Could not load one of the valididation layers.");
+    }
     return false;
   }
 
@@ -208,10 +211,8 @@ bool createVulkanInstanceWithWsiExtensionsEnabled(
   desiredExtensions.emplace_back(
 #ifdef VK_USE_PLATFORM_WIN32_KHR
       VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-
 #elif defined VK_USE_PLATFORM_XCB_KHR
       VK_KHR_XCB_SURFACE_EXTENSION_NAME
-
 #elif defined VK_USE_PLATFORM_XLIB_KHR
       VK_KHR_XLIB_SURFACE_EXTENSION_NAME
 #endif

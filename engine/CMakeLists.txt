@@ -33,7 +33,7 @@ project(engine)
 		NOMINMAX QUIT_ESCAPE VULKAN_OBJ_TRACKER CP_WINDOWS_PLATFORM  _CRT_SECURE_NO_WARNINGS)
 	elseif(APPLE)
     elseif (UNIX)
-        add_compile_definitions( VK_NO_PROTOTYPES QUIT_ESCAPE VULKAN_OBJ_TRACKER CP_LINUX_PLATFORM)
+        add_compile_definitions( VK_NO_PROTOTYPES QUIT_ESCAPE VK_USE_PLATFORM_XCB_KHR VULKAN_OBJ_TRACKER CP_LINUX_PLATFORM)
     endif ()
 
 	#making sure to add the common cpp flags, that are defined in the main cpp file
