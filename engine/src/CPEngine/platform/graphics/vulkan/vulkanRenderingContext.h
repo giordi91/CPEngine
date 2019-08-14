@@ -1,31 +1,30 @@
 #pragma once
 #include "CPEngine/graphics/renderingContext.h"
 #include <vulkan/vulkan.h>
-//TODO: remove vector
-#include <vector>
+// TODO: remove vector
 #include "CPEngine/platform/graphics/vulkan/vkSwapChain.h"
+#include <vector>
 
 namespace cp::graphics::vulkan {
 
 struct VulkanResources {
-  VkInstance INSTANCE = nullptr;
-  VkSurfaceKHR SURFACE = nullptr;
-  VkDevice LOGICAL_DEVICE = nullptr;
-  VkQueue GRAPHICS_QUEUE = nullptr;
-  VkQueue COMPUTE_QUEUE = nullptr;
-  VkQueue PRESENTATION_QUEUE = nullptr;
-  VkPhysicalDevice PHYSICAL_DEVICE = nullptr;
-  VkSwapchain *SWAP_CHAIN = nullptr;
-  VkRenderPass RENDER_PASS = nullptr;
-  VkSemaphore IMAGE_ACQUIRED_SEMAPHORE = nullptr;
-  VkSemaphore READY_TO_PRESENT_SEMAPHORE = nullptr;
-  VkCommandPool COMMAND_POOL = nullptr;
-  VkCommandBuffer COMMAND_BUFFER = nullptr;
-  VkFormat IMAGE_FORMAT = VK_FORMAT_UNDEFINED;
-  VkPipelineLayout PIPELINE_LAYOUT = nullptr;
-  VkDebugReportCallbackEXT DEBUG_CALLBACK = nullptr;
-  VkDebugUtilsMessengerEXT DEBUG_CALLBACK2 = nullptr;
-  std::vector<VkDescriptorSetLayout> LAYOUTS_TO_DELETE;
+  VkInstance instance = nullptr;
+  VkSurfaceKHR surface = nullptr;
+  VkDevice logicalDevice = nullptr;
+  VkQueue graphicsQueue = nullptr;
+  VkQueue computeQueue = nullptr;
+  VkQueue presentationQueue = nullptr;
+  VkPhysicalDevice physicalDevice = nullptr;
+  VkSwapchain *swapChain = nullptr;
+  VkRenderPass renderPass = nullptr;
+  VkSemaphore imageAcquiredSemaphore = nullptr;
+  VkSemaphore readyToPresentSemaphore = nullptr;
+  VkCommandPool commandPool = nullptr;
+  VkCommandBuffer commandBuffer = nullptr;
+  VkFormat imageFormat = VK_FORMAT_UNDEFINED;
+  VkPipelineLayout pipelineLayout = nullptr;
+  VkPipeline pipeline = nullptr;
+  std::vector<VkDescriptorSetLayout> descriptorSetLayoutToDelete;
 };
 
 graphics::RenderingContext *
@@ -50,8 +49,10 @@ public:
   inline VulkanResources *getResources() { return &m_resources; }
 
 private:
+  void tempPipeInit();
 private:
   VulkanResources m_resources{};
+  uint32_t m_internalResourceIndex = 0;
 };
 
 } // namespace cp::graphics::vulkan

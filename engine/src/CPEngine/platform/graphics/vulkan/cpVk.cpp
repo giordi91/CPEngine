@@ -9,6 +9,7 @@ namespace cp::graphics::vulkan {
 
 LIBRARY_TYPE VULKAN_LIBRARY = nullptr;
 VkDebugUtilsMessengerEXT DEBUG_CALLBACK = nullptr;
+VkDebugReportCallbackEXT DEBUG_CALLBACK2 = nullptr;
 
 bool loadFunctionExportedFromVulkanLoaderLibrary(
     LIBRARY_TYPE const &vulkanLibrary) {
@@ -116,14 +117,9 @@ bool createVulkanInstance(std::vector<char const *> const &desiredExtensions,
   // TODO: change this to flgas possibly from the context creation
 #if _DEBUG
   const char *layers[] = {
-    "VK_LAYER_LUNARG_standard_validation",
-
-#if VULKAN_OBJ_TRACKER
-    "VK_LAYER_LUNARG_object_tracker",
-#endif
-#if VULKAN_PARAM_VALIDATION
-    "VK_LAYER_LUNARG_parameter_validation",
-#endif
+      "VK_LAYER_LUNARG_standard_validation",
+      "VK_LAYER_LUNARG_object_tracker",
+      "VK_LAYER_LUNARG_parameter_validation",
   };
   instanceCreateInfo.ppEnabledLayerNames = layers;
   instanceCreateInfo.enabledLayerCount = ARRAYSIZE(layers);
@@ -136,6 +132,49 @@ bool createVulkanInstance(std::vector<char const *> const &desiredExtensions,
     return false;
   }
 
+  return true;
+}
+VkBool32 debugCallback2(VkDebugReportFlagsEXT flags,
+                        VkDebugReportObjectTypeEXT objectType, uint64_t object,
+                        size_t location, int32_t messageCode,
+                        const char *pLayerPrefix, const char *pMessage,
+                        void *pUserData) {
+
+  const char *type =
+      flags & VK_DEBUG_REPORT_ERROR_BIT_EXT
+          ? "ERROR"
+          : (flags & (VK_DEBUG_REPORT_WARNING_BIT_EXT |
+                      VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT))
+                ? "WARNING"
+                : "INFO";
+
+  char message[4096];
+  snprintf(message, ARRAYSIZE(message), "%s: %s\n", type, pMessage);
+#if _WIN32
+  OutputDebugStringA(message);
+#endif
+
+  printf("%s", message);
+  if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
+    assert(0 && "validation layer assertion");
+  }
+
+  // always need to return false, true is reserved for layer development
+  return VK_FALSE;
+}
+
+bool registerDebugCallback2(VkInstance instance) {
+  VkDebugReportCallbackCreateInfoEXT createInfo{
+      VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT};
+  createInfo.flags = VK_DEBUG_REPORT_WARNING_BIT_EXT |
+                     VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
+                     VK_DEBUG_REPORT_ERROR_BIT_EXT |
+                     VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+  createInfo.pfnCallback = debugCallback2;
+
+  const VkResult callbackResult = vkCreateDebugReportCallbackEXT(
+      instance, &createInfo, nullptr, &DEBUG_CALLBACK2);
+  assert(callbackResult == VK_SUCCESS);
   return true;
 }
 
@@ -185,22 +224,22 @@ VkBool32 VKAPI_PTR debugCallback(
 bool registerDebugCallback(VkInstance instance) {
 
   // create debug utils messenger
-  VkDebugUtilsMessengerCreateInfoEXT debug_utils_messenger_create_info = {};
-  debug_utils_messenger_create_info.sType =
+  VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCreateInfo = {};
+  debugUtilsMessengerCreateInfo.sType =
       VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-  debug_utils_messenger_create_info.messageSeverity =
+  debugUtilsMessengerCreateInfo.messageSeverity =
       VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
       VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-      // VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
+      VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
       VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
-  debug_utils_messenger_create_info.messageType =
+  debugUtilsMessengerCreateInfo.messageType =
       VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
       VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
       VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
-  debug_utils_messenger_create_info.pfnUserCallback = debugCallback;
+  debugUtilsMessengerCreateInfo.pfnUserCallback = debugCallback;
   if (VK_SUCCESS !=
-      vkCreateDebugUtilsMessengerEXT(
-          instance, &debug_utils_messenger_create_info, NULL, &DEBUG_CALLBACK))
+      vkCreateDebugUtilsMessengerEXT(instance, &debugUtilsMessengerCreateInfo,
+                                     NULL, &DEBUG_CALLBACK))
     exit(EXIT_FAILURE);
   return true;
 }
@@ -519,10 +558,10 @@ bool selectQueueFamilyThatSupportsPresentationToGivenSurface(
 
   for (uint32_t index = 0; index < static_cast<uint32_t>(queue_families.size());
        ++index) {
-    VkBool32 presentation_supported = VK_FALSE;
-    VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(
-        physicalDevice, index, presentationSurface, &presentation_supported);
-    if ((VK_SUCCESS == result) && (VK_TRUE == presentation_supported)) {
+    VkBool32 presentationSupported = VK_FALSE;
+    const VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(
+        physicalDevice, index, presentationSurface, &presentationSupported);
+    if ((VK_SUCCESS == result) && (VK_TRUE == presentationSupported)) {
       queueFamilyIndex = index;
       return true;
     }
@@ -635,7 +674,7 @@ VkFramebuffer createFrameBuffer(const VkDevice logicalDevice,
   vkCreateFramebuffer(logicalDevice, &createInfo, nullptr, &frameBuffer);
   return frameBuffer;
 }
-  bool createCommandPool(const VkDevice logicalDevice,
+bool createCommandPool(const VkDevice logicalDevice,
                        const VkCommandPoolCreateFlags parameters,
                        const uint32_t queueFamily, VkCommandPool &commandPool) {
   VkCommandPoolCreateInfo commandPoolCreateInfo = {
@@ -668,6 +707,140 @@ bool allocateCommandBuffers(const VkDevice logicalDevice,
     return false;
   }
   return true;
+}
+
+VkPipeline
+createGraphicsPipeline(VkDevice logicalDevice, VkShaderModule vs,
+                       VkShaderModule ps, VkRenderPass renderPass,
+                       VkPipelineVertexInputStateCreateInfo *vertexInfo, VkPipelineLayout& outLayout) {
+  VkPipelineLayoutCreateInfo layoutInfo = {
+      VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+
+  /*
+  VkDescriptorSetLayoutBinding bindings[2]{};
+  bindings[0].binding = 0;
+  bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+  bindings[0].descriptorCount = 1;
+  bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+  bindings[1].binding = 1;
+  bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  bindings[1].descriptorCount = 1;
+  bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutCreateInfo descriptorInfo{
+      VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+  // descriptorInfo.flags =
+  //    VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
+
+  descriptorInfo.bindingCount = ARRAYSIZE(bindings);
+  descriptorInfo.pBindings = bindings;
+
+  VkDescriptorSetLayout descriptorLayout;
+  vkCreateDescriptorSetLayout(logicalDevice, &descriptorInfo, nullptr,
+                              &descriptorLayout);
+
+  layoutInfo.setLayoutCount = 1;
+  layoutInfo.pSetLayouts = &descriptorLayout;
+  */
+
+  layoutInfo.setLayoutCount = 0;
+  layoutInfo.pSetLayouts = VK_NULL_HANDLE;
+
+  vkCreatePipelineLayout(logicalDevice, &layoutInfo, nullptr, &outLayout);
+
+  //LAYOUTS_TO_DELETE.push_back(descriptorLayout);
+
+  VkPipelineShaderStageCreateInfo stages[2] = {};
+  stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  stages[0].module = vs;
+  stages[0].pName = "main";
+  // this allows us to change constants at pipeline creation time,
+  // this can allow for example to change compute shaders group size
+  // and possibly allow brute force benchmarks with different sizes
+  // vsInfo.pSpecializationInfo;
+  stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  stages[1].module = ps;
+  stages[1].pName = "main";
+
+  VkPipelineVertexInputStateCreateInfo vertexInputCreateInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
+
+  VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
+  inputAssemblyCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+  inputAssemblyCreateInfo.primitiveRestartEnable = false;
+
+  VkPipelineViewportStateCreateInfo viewportCreateInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO};
+  viewportCreateInfo.viewportCount = 1;
+  viewportCreateInfo.scissorCount = 1;
+
+  VkPipelineRasterizationStateCreateInfo rasterInfo{
+      VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
+  rasterInfo.depthClampEnable = false;
+  rasterInfo.rasterizerDiscardEnable = false;
+  rasterInfo.polygonMode = VK_POLYGON_MODE_FILL;
+  rasterInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
+  rasterInfo.lineWidth = 1.0f; // even if we don't use it must be specified
+  rasterInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+  ;
+
+  VkPipelineMultisampleStateCreateInfo multisampleState{
+      VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
+  multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+  VkGraphicsPipelineCreateInfo createInfo{
+      VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
+  VkPipelineDepthStencilStateCreateInfo depthStencilState = {
+      VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
+  depthStencilState.depthTestEnable = false;
+
+  VkPipelineColorBlendAttachmentState attachState{};
+  attachState.colorWriteMask =
+      VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+      VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+
+  VkPipelineColorBlendStateCreateInfo blendState{
+      VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
+  blendState.attachmentCount = 1;
+  blendState.pAttachments = &attachState;
+
+  VkDynamicState dynStateFlags[] = {VK_DYNAMIC_STATE_VIEWPORT,
+                                    VK_DYNAMIC_STATE_SCISSOR};
+
+  VkPipelineDynamicStateCreateInfo dynamicState = {
+      VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
+  dynamicState.dynamicStateCount =
+      sizeof(dynStateFlags) / sizeof(dynStateFlags[0]);
+  dynamicState.pDynamicStates = dynStateFlags;
+
+  //NOTE NO SHADERSS!!!
+  //createInfo.stageCount = 2;
+  //createInfo.pStages = stages;
+  createInfo.stageCount = 0;
+  createInfo.pStages = VK_NULL_HANDLE;
+
+  createInfo.pVertexInputState =
+      vertexInfo != nullptr ? vertexInfo : &vertexInputCreateInfo;
+  createInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
+  createInfo.pViewportState = &viewportCreateInfo;
+  createInfo.pRasterizationState = &rasterInfo;
+  createInfo.pMultisampleState = &multisampleState;
+  createInfo.pDepthStencilState = &depthStencilState;
+  createInfo.pColorBlendState = &blendState;
+  createInfo.pDynamicState = &dynamicState;
+  createInfo.renderPass = renderPass;
+  createInfo.layout = outLayout;
+
+  VkPipeline pipeline = nullptr;
+  VkResult status = vkCreateGraphicsPipelines(logicalDevice, nullptr, 1,
+                                              &createInfo, nullptr, &pipeline);
+  assert(status == VK_SUCCESS);
+  assert(pipeline);
+  return pipeline;
 }
 
 } // namespace cp::graphics::vulkan

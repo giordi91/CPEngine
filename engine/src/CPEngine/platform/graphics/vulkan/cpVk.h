@@ -69,6 +69,7 @@ bool createVulkanInstance(std::vector<char const *> const &desiredExtensions,
                           char const *const applicationName,
                           VkInstance &instance);
 bool registerDebugCallback(VkInstance instance);
+bool registerDebugCallback2(VkInstance instance); 
 
 bool createVulkanInstanceWithWsiExtensionsEnabled(
     std::vector<char const *> &desiredExtensions,
@@ -116,4 +117,11 @@ bool allocateCommandBuffers(const VkDevice logicalDevice,
                             const uint32_t count,
                             std::vector<VkCommandBuffer>& commandBuffers);
 
+bool presentImage(VkQueue queue, std::vector<VkSemaphore> renderingSemaphores,
+                  std::vector<PresentInfo> imagesToPresent); 
+VkPipeline
+createGraphicsPipeline(VkDevice logicalDevice, VkShaderModule vs,
+                       VkShaderModule ps, VkRenderPass renderPass,
+                       VkPipelineVertexInputStateCreateInfo *vertexInfo, VkPipelineLayout& outLayout); 
+ 
 } // namespace cp::graphics::vulkan
