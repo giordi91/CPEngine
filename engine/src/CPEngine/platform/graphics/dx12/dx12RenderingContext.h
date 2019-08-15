@@ -29,7 +29,7 @@ struct Dx12Resources {
   D3D12DeviceType *device = nullptr;
   ID3D12CommandQueue *globalCommandQueue = nullptr;
   ID3D12Fence *globalFence = nullptr;
-  SwapChain *swapChain = nullptr;
+  Dx12SwapChain *swapChain = nullptr;
   FrameResource *frameResources = nullptr;
   FrameResource *currentFrameResource = nullptr;
   DescriptorHeap *cbvSrvUavHeap = nullptr;

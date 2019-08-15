@@ -11,12 +11,12 @@ namespace dx12 {
 struct FrameCommand;
 class Dx12RenderingContext;
 
-class SwapChain final {
+class Dx12SwapChain final {
 public:
-  SwapChain() = default;
-  ~SwapChain() = default;
-  SwapChain(const SwapChain &) = delete;
-  SwapChain &operator=(const SwapChain &) = delete;
+  Dx12SwapChain() = default;
+  ~Dx12SwapChain() = default;
+  Dx12SwapChain(const Dx12SwapChain &) = delete;
+  Dx12SwapChain &operator=(const Dx12SwapChain &) = delete;
 
   bool resize(FrameCommand *command, int width, int height);
   bool initialize(Dx12RenderingContext *context);
@@ -52,12 +52,12 @@ private:
   const DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
   const DXGI_FORMAT m_depthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
   bool m_4xMsaaState = false;
-  UINT m_msaaQuality;
+  UINT m_msaaQuality = 0;
 
   IDXGISwapChain *m_swapChain = nullptr;
 
   UINT m_currentBackBuffer = 0;
-  uint32_t m_inFlightFrames;
+  uint32_t m_inFlightFrames = 0;
   // TextureHandle m_swapChainBuffersHandles[FRAME_BUFFERS_COUNT];
   // DescriptorPair m_swapChainBuffersDescriptors[FRAME_BUFFERS_COUNT];
 
@@ -67,11 +67,11 @@ private:
   // TextureHandle m_swapChainDepth;
   // DescriptorPair m_swapChainDepthDescriptors;
 
-  ID3D12Resource *m_swapChainDepth;
-  DescriptorPair m_swapChainDepthDescriptors;
+  ID3D12Resource *m_swapChainDepth = nullptr;
+  DescriptorPair m_swapChainDepthDescriptors {};
 
-  D3D12_VIEWPORT m_screenViewport;
-  D3D12_RECT m_scissorRect;
+  D3D12_VIEWPORT m_screenViewport{};
+  D3D12_RECT m_scissorRect{};
   bool m_isInit = false;
 
   Dx12RenderingContext *m_renderingContext = nullptr;

@@ -101,7 +101,7 @@ SwapChain::~SwapChain() {
   // dx12::TEXTURE_MANAGER->free(m_swapChainDepth);
 }
 */
-bool SwapChain::initialize(Dx12RenderingContext *context) {
+bool Dx12SwapChain::initialize(Dx12RenderingContext *context) {
 
   m_renderingContext = context;
   Dx12Resources *resources = context->getResources();
@@ -157,7 +157,7 @@ bool SwapChain::initialize(Dx12RenderingContext *context) {
   return FAILED(result);
 }
 
-bool SwapChain::resize(FrameCommand *command, const int width,
+bool Dx12SwapChain::resize(FrameCommand *command, const int width,
                        const int height) {
 
   // Flush before changing any resources.

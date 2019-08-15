@@ -267,7 +267,7 @@ bool Dx12RenderingContext::initializeGraphics() {
   return true;
 */
   // init swap chain
-  m_resources.swapChain = new dx12::SwapChain();
+  m_resources.swapChain = new dx12::Dx12SwapChain();
   m_resources.swapChain->initialize(this);
   flushCommandQueue(m_resources.globalCommandQueue);
 
