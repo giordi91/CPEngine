@@ -6,8 +6,8 @@
 #include "CPEngine/core/logging.h"
 #include "CPEngine/graphics/renderingContext.h"
 #include "CPEngine/platform/graphics/dx12/cpDX12.h"
-#include "descriptorHeap.h"
 #include "CPEngine/platform/graphics/dx12/dx12RenderingContext.h"
+#include "descriptorHeap.h"
 #include <CPEngine/globals.h>
 #include <cassert>
 #include <d3d12.h>
@@ -268,11 +268,12 @@ bool Dx12RenderingContext::initializeGraphics() {
 */
   // init swap chain
   m_resources.swapChain = new dx12::Dx12SwapChain();
-  m_resources.swapChain->initialize(this);
+  createSwapchain(m_resources.swapChain, this);
   flushCommandQueue(m_resources.globalCommandQueue);
 
-  m_resources.swapChain->resize(&m_resources.currentFrameResource->fc,
-                                m_settings.width, m_settings.height);
+  resizeSwapchain(this, m_resources.swapChain,
+                  &m_resources.currentFrameResource->fc, m_settings.width,
+                  m_settings.height);
   //}
   // else {
   //  SE_CORE_INFO("Requested HEADLESS client, no swapchain is initialized");
@@ -309,8 +310,7 @@ bool Dx12RenderingContext::newFrame() {
   // execution on the GPU.
   // Indicate a state transition on the resource usage.
   D3D12_RESOURCE_BARRIER rtbarrier[1];
-  ID3D12Resource *backBuffer =
-      m_resources.swapChain->currentBackBufferTexture();
+  ID3D12Resource *backBuffer = swapchainCurrentBackBufferTexture(m_resources.swapChain);
   rtbarrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(
       backBuffer, D3D12_RESOURCE_STATE_PRESENT,
       D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -319,12 +319,13 @@ bool Dx12RenderingContext::newFrame() {
 
   // Set the viewport and scissor rect.  This needs to be reset whenever the
   // command list is reset.
-  commandList->RSSetViewports(1, m_resources.swapChain->getViewport());
-  commandList->RSSetScissorRects(1, m_resources.swapChain->getScissorRect());
+  commandList->RSSetViewports(1, &m_resources.swapChain->m_screenViewport);
+  commandList->RSSetScissorRects(1, &m_resources.swapChain->m_scissorRect);
 
   // temporary color clear
   float gray[4] = {0.5f, 0.9f, 0.5f, 1.0f};
-  auto backBufferDescriptor = m_resources.swapChain->currentBackBufferView();
+  const auto backBufferDescriptor =
+      swapchainCurrentBackBufferView(m_resources.swapChain);
   commandList->ClearRenderTargetView(backBufferDescriptor, gray, 0, nullptr);
 
   auto *heap = m_resources.cbvSrvUavHeap->getResource();
@@ -338,8 +339,7 @@ bool Dx12RenderingContext::dispatchFrame() {
   // finally transition the resource to be present
   auto *commandList = m_resources.currentFrameResource->fc.commandList;
 
-  ID3D12Resource *backBuffer =
-      m_resources.swapChain->currentBackBufferTexture();
+  ID3D12Resource *backBuffer = swapchainCurrentBackBufferTexture(m_resources.swapChain);
   rtbarrier[0] = CD3DX12_RESOURCE_BARRIER::Transition(
       backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET,
       D3D12_RESOURCE_STATE_PRESENT);
@@ -359,7 +359,7 @@ bool Dx12RenderingContext::dispatchFrame() {
   m_resources.globalCommandQueue->Signal(m_resources.globalFence,
                                          m_internalCurrentFence);
   // swap the back and front buffers
-  m_resources.swapChain->present();
+  swapchainPresent(m_resources.swapChain);
   // bump the frame
   ++globals::CURRENT_FRAME;
   m_internalResourceIndex =
@@ -368,9 +368,9 @@ bool Dx12RenderingContext::dispatchFrame() {
 }
 
 bool Dx12RenderingContext::resize(const uint32_t width, const uint32_t height) {
-  m_screenInfo = {width,height};
-  return m_resources.swapChain->resize(&m_resources.currentFrameResource->fc,
-                                       width, height);
+  m_screenInfo = {width, height};
+  return resizeSwapchain(this, m_resources.swapChain,
+                         &m_resources.currentFrameResource->fc, width, height);
 }
 
 } // namespace cp::graphics::dx12

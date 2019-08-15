@@ -1,7 +1,7 @@
 #pragma once
 #include "CPEngine/graphics/renderingContext.h"
 #include "CPEngine/platform/graphics/dx12/Dx12Adapter.h"
-#include "CPEngine/platform/graphics/dx12/dx12SwapChain.h"
+#include "CPEngine/platform/graphics/dx12/Dx12SwapChain.h"
 #include "CPEngine/platform/graphics/dx12/cpDX12.h"
 #include <cassert>
 #include <d3d12.h>
@@ -80,6 +80,9 @@ public:
   bool resize(uint32_t width, uint32_t height) override;
 
   inline Dx12Resources *getResources() { return &m_resources; }
+  inline const Dx12Resources *getResourcesReadOnly() const {
+    return &m_resources;
+  }
   inline IDXGIFactory6 *getFactory() const { return m_dxgiFactory; }
 
   void flushGlobalCommandQueue();
